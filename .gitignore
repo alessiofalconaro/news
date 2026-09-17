@@ -1,15 +1,16 @@
-# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
-
-# Compiled output
-/dist
-/tmp
-/out-tsc
-/bazel-out
+# Compiled output (any workspace, not just the repository root)
+dist/
+tmp/
+out-tsc/
+bazel-out/
 
 # Node
-/node_modules
+node_modules/
 npm-debug.log
 yarn-error.log
+
+# Angular
+.angular/
 
 # IDEs and editors
 .idea/
@@ -19,6 +20,7 @@ yarn-error.log
 *.launch
 .settings/
 *.sublime-workspace
+.history/
 
 # Visual Studio Code
 .vscode/*
@@ -26,10 +28,8 @@ yarn-error.log
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.history/*
 
 # Miscellaneous
-/.angular/cache
 .sass-cache/
 /connect.lock
 /coverage
@@ -42,10 +42,15 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
-# Claude Code (per-macchina)
+# Claude Code (per-machine)
 .claude/settings.local.json
 
 # Firebase
 .firebase/
 firebase-debug.log
 firestore-debug.log
+firebase-export-*/
+ui-debug.log
+
+# Secrets: never commit these
+.env

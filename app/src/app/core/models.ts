@@ -1,0 +1,88 @@
+/**
+ * Firestore data model.
+ *
+ * PROJECT_SPEC section 7 describes this schema in Supabase terms (snake_case
+ * tables, RLS). On Firestore the equivalent is camelCase collections plus
+ * `firestore.rules`; the mapping is written down in the README.
+ *
+ * One deliberate difference: `Story` also carries `userId`, which the SQL schema
+ * did not need. Firestore has no joins, so without it every read of a story
+ * would have to fetch its digest just to prove ownership.
+ */
+
+export type Lang = 'it' | 'en';
+export type SourceLanguage = 'it' | 'en' | 'both';
+export type DigestStatus = 'ok' | 'partial' | 'failed';
+
+export const MAX_ACTIVE_TOPICS = 10;
+export const MIN_STORIES = 3;
+export const MAX_STORIES = 10;
+export const DEFAULT_STORIES = 5;
+
+export interface Profile {
+  id: string;
+  email: string;
+  displayName: string;
+  language: Lang;
+  createdAt: number;
+}
+
+export interface Topic {
+  id: string;
+  userId: string;
+  name: string;
+  /** Free text that drives the AI selection. */
+  interests: string;
+  /** Empty means: use `name` as the query. */
+  searchQuery: string;
+  sourceLanguage: SourceLanguage;
+  extraFeeds: string[];
+  maxStories: number;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Digest {
+  id: string;
+  userId: string;
+  /** Local date in Europe/Rome, as `YYYY-MM-DD`. */
+  digestDate: string;
+  status: DigestStatus;
+  /** Names of the topics that failed, shown by the partial-digest banner. */
+  failedTopics: string[];
+  createdAt: number;
+}
+
+export interface StorySource {
+  name: string;
+  url: string;
+}
+
+export interface Story {
+  id: string;
+  digestId: string;
+  userId: string;
+  /** Null once the topic is deleted; `topicName` keeps the archive readable. */
+  topicId: string | null;
+  topicName: string;
+  rank: number;
+  headlineIt: string;
+  headlineEn: string;
+  summaryIt: string;
+  summaryEn: string;
+  primaryUrl: string;
+  sources: StorySource[];
+  sourceCount: number;
+  latestPublishedAt: number;
+}
+
+export interface PushSubscriptionRecord {
+  id: string;
+  userId: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  createdAt: number;
+}

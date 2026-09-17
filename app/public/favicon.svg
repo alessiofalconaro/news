@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="NewsDigest">
+  <rect width="512" height="512" rx="114" fill="#e4713c"/>
+  <g fill="#fff6f1">
+    <rect x="112" y="150" width="224" height="30" rx="15"/>
+    <rect x="112" y="226" width="170" height="30" rx="15"/>
+    <rect x="112" y="302" width="116" height="30" rx="15"/>
+  </g>
+  <rect x="368" y="126" width="32" height="260" rx="16" fill="#fff6f1" opacity="0.62"/>
+</svg>

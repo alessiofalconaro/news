@@ -1,0 +1,14 @@
+{
+  "name": "newsdigest-firestore-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "cd .. && firebase emulators:exec --only firestore --project demo-newsdigest \"node firestore-tests/rules.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "firebase": "^12.15.0",
+    "firebase-tools": "^15.0.0"
+  }
+}

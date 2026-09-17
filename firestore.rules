@@ -1,0 +1,100 @@
+rules_version = '2';
+
+// NewsDigest. Two layers of protection, both required:
+//   1. the allow list: only the invited email addresses exist for this app;
+//   2. ownership: a signed-in account only ever touches its own rows.
+//
+// The pipeline writes through the Admin SDK, which bypasses these rules, so
+// every collection it owns is read-only (or invisible) from the browser.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function email() {
+      return request.auth.token.email.lower();
+    }
+
+    // Google always marks its addresses verified; requiring it here stops a
+    // provider that does not from smuggling somebody else's address in.
+    function allowed() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/allowedEmails/$(email()));
+    }
+
+    function owns(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function validTopic(d) {
+      return d.name is string && d.name.size() > 0 && d.name.size() <= 80
+        && d.interests is string && d.interests.size() > 0 && d.interests.size() <= 1000
+        && d.searchQuery is string && d.searchQuery.size() <= 200
+        && d.sourceLanguage in ['it', 'en', 'both']
+        && d.extraFeeds is list && d.extraFeeds.size() <= 10
+        && d.maxStories is int && d.maxStories >= 3 && d.maxStories <= 10
+        && d.isActive is bool
+        && d.sortOrder is int;
+    }
+
+    // An account may check its OWN entry and nothing else: no listing, so the
+    // invited addresses cannot be enumerated. Managed from the console.
+    match /allowedEmails/{allowedEmail} {
+      allow get: if signedIn() && email() == allowedEmail;
+      allow list, write: if false;
+    }
+
+    match /profiles/{uid} {
+      allow read: if allowed() && owns(uid);
+      allow create: if allowed() && owns(uid)
+        && request.resource.data.email == email()
+        && request.resource.data.language in ['it', 'en'];
+      allow update: if allowed() && owns(uid)
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.language in ['it', 'en'];
+      allow delete: if false;
+    }
+
+    match /topics/{topicId} {
+      allow read: if allowed() && owns(resource.data.userId);
+      allow create: if allowed()
+        && owns(request.resource.data.userId)
+        && validTopic(request.resource.data);
+      allow update: if allowed()
+        && owns(resource.data.userId)
+        && request.resource.data.userId == resource.data.userId
+        && validTopic(request.resource.data);
+      allow delete: if allowed() && owns(resource.data.userId);
+    }
+
+    // Written by the pipeline only.
+    match /digests/{digestId} {
+      allow read: if allowed() && owns(resource.data.userId);
+      allow write: if false;
+    }
+
+    match /stories/{storyId} {
+      allow read: if allowed() && owns(resource.data.userId);
+      allow write: if false;
+    }
+
+    // Pure bookkeeping for the pipeline: the browser never needs to see it.
+    match /seenArticles/{articleId} {
+      allow read, write: if false;
+    }
+
+    match /pushSubscriptions/{subscriptionId} {
+      allow read, delete: if allowed() && owns(resource.data.userId);
+      allow create: if allowed() && owns(request.resource.data.userId);
+      allow update: if false;
+    }
+
+    // Anything not named above does not exist for the browser.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
