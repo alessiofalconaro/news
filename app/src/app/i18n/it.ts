@@ -134,7 +134,18 @@ export const it = {
     refreshCancel: 'Annulla la richiesta',
     refreshError: 'Non sono riuscito a inviare la richiesta.',
     notifications: 'Notifiche',
-    notificationsComingSoon: 'Le notifiche arrivano nella Fase 5.',
+    notificationsHint: 'Un avviso quando il digest e’ pronto, sul telefono.',
+    notificationsOn: 'Attive su questo dispositivo',
+    notificationsEnable: 'Attiva le notifiche',
+    notificationsDisable: 'Disattiva',
+    notificationsTest: 'Mandami una notifica di prova',
+    notificationsTestTitle: 'NewsDigest',
+    notificationsTestBody: 'Se leggi questo, le notifiche funzionano.',
+    notificationsDenied:
+      'Le hai rifiutate. Per riattivarle: Impostazioni di iOS → NewsDigest → Notifiche.',
+    notificationsUnsupported:
+      'Questo browser non le supporta. Su iPhone devi prima aggiungere l’app alla schermata Home e aprirla da li’.',
+    notificationsNotConfigured: 'Non ancora configurate: manca la chiave VAPID (punto 15 del README).',
     account: 'Account',
   },
 };

@@ -31,6 +31,8 @@ function required(name: string): string {
 }
 
 export interface Config {
+  /** Absent until the VAPID keys are set: the digest still works without them. */
+  push: { publicKey: string; privateKey: string; subject: string } | null;
   geminiApiKey: string;
   /** Service account JSON for the Admin SDK, as a single-line string. */
   serviceAccount: Record<string, unknown>;
@@ -47,5 +49,10 @@ export function loadConfig(): Config {
         'scaricato, su una riga sola, tra apici singoli dentro il .env.',
     );
   }
-  return { geminiApiKey: required('GEMINI_API_KEY'), serviceAccount };
+  const publicKey = process.env['VAPID_PUBLIC_KEY']?.trim();
+  const privateKey = process.env['VAPID_PRIVATE_KEY']?.trim();
+  const subject = process.env['VAPID_SUBJECT']?.trim();
+  const push = publicKey && privateKey && subject ? { publicKey, privateKey, subject } : null;
+
+  return { geminiApiKey: required('GEMINI_API_KEY'), serviceAccount, push };
 }

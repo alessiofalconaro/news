@@ -4,6 +4,7 @@ import { AuthService } from '../core/auth.service';
 import { Theme } from '../core/theme.service';
 import { ProfileService } from '../core/profile.service';
 import { RefreshService } from '../digest/refresh.service';
+import { PushService } from '../core/push.service';
 import { nextRound, wouldReplace } from '../digest/schedule';
 import { DEFAULT_DIGEST_HOUR, MAX_DIGEST_HOUR, MIN_DIGEST_HOUR } from '../core/models';
 import { LangToggle } from '../lang-toggle';
@@ -84,7 +85,39 @@ import { LangToggle } from '../lang-toggle';
 
     <section class="card">
       <h2>{{ t().settings.notifications }}</h2>
-      <p class="muted">{{ t().settings.notificationsComingSoon }}</p>
+      <p class="muted">{{ t().settings.notificationsHint }}</p>
+
+      @switch (push.state()) {
+        @case ('on') {
+          <p class="on">✓ {{ t().settings.notificationsOn }}</p>
+          <div class="buttons">
+            <button class="btn" [disabled]="push.busy()" (click)="testNotification()">
+              {{ t().settings.notificationsTest }}
+            </button>
+            <button class="btn btn-ghost" [disabled]="push.busy()" (click)="push.disable()">
+              {{ t().settings.notificationsDisable }}
+            </button>
+          </div>
+        }
+        @case ('off') {
+          <button class="btn btn-primary" [disabled]="push.busy()" (click)="push.enable()">
+            {{ t().settings.notificationsEnable }}
+          </button>
+        }
+        @case ('denied') {
+          <p class="muted">{{ t().settings.notificationsDenied }}</p>
+        }
+        @case ('unsupported') {
+          <p class="muted">{{ t().settings.notificationsUnsupported }}</p>
+        }
+        @case ('notConfigured') {
+          <p class="muted">{{ t().settings.notificationsNotConfigured }}</p>
+        }
+      }
+
+      @if (push.error()) {
+        <p class="banner banner-error">{{ push.error() }}</p>
+      }
     </section>
 
     <section class="card">
@@ -143,6 +176,17 @@ import { LangToggle } from '../lang-toggle';
         font-size: 0.86rem;
         line-height: 1.45;
       }
+      .on {
+        margin: 0 0 12px;
+        color: var(--success);
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+      .buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
       .pending {
         margin: 0 0 12px;
         color: var(--warn);
@@ -160,6 +204,7 @@ export class SettingsPage implements OnDestroy {
   private readonly i18n = inject(I18n);
   private readonly profiles = inject(ProfileService);
   readonly refresh = inject(RefreshService);
+  readonly push = inject(PushService);
   readonly t = this.i18n.t;
 
   readonly hours = Array.from(
@@ -189,6 +234,13 @@ export class SettingsPage implements OnDestroy {
       ? this.t().settings.refreshExtraOnly
       : this.t().settings.refreshExtraWithNext(this.label(next));
   });
+
+  testNotification(): void {
+    void this.push.showTest(
+      this.t().settings.notificationsTestTitle,
+      this.t().settings.notificationsTestBody,
+    );
+  }
 
   ngOnDestroy(): void {
     clearInterval(this.clock);

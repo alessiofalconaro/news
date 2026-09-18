@@ -18,7 +18,7 @@ firestore.indexes.json
 firebase.json         hosting e intestazioni di sicurezza
 ```
 
-## Stato: Fase 4
+## Stato: Fase 5
 
 **Fase 1** — struttura, traduzioni italiano e inglese con cambio istantaneo,
 login con Google, lista degli invitati, regole del database, gestione dei
@@ -31,10 +31,12 @@ notizie e di scriverle in italiano e inglese.
 **Fase 3** — le notizie si salvano sul database e si vedono nell'app,
 raggruppate per topic e con l'immagine del soggetto quando esiste.
 
-**Fase 4** — il digest si costruisce da solo ogni mattina, anche a computer
-spento.
+**Fase 4** — il digest si costruisce da solo, anche a computer spento, all’ora
+che ciascuno sceglie.
 
-Manca la **Fase 5**: le notifiche push.
+**Fase 5** — notifiche push quando il digest è pronto.
+
+Manca la **Fase 6**: la rifinitura finale.
 
 ---
 
@@ -349,6 +351,54 @@ non corrisponde piu' rifa' la query invece di riusare quella in cache.
 
 Le notizie gia' salvate non cambiano: la modifica vale da li' in avanti.
 
+
+# Le notifiche (Fase 5)
+
+Quando il digest e’ pronto arriva un avviso sul telefono, nella lingua che hai
+scelto: *“Il tuo digest e’ pronto: 23 notizie da 6 topic”*. Toccandolo si apre
+la pagina Oggi.
+
+Le chiavi VAPID sono gia’ state generate: la meta’ pubblica sta nel codice
+dell’app, la privata solo nel tuo `.env`. Resta da portarle su GitHub.
+
+## 15. Metti le chiavi delle notifiche su GitHub
+
+Su <https://github.com/alessiofalconaro/news/settings/secrets/actions>, tre
+nuovi segreti, copiando i valori dal tuo `.env`:
+
+| Name | Secret |
+|---|---|
+| `VAPID_PUBLIC_KEY` | la riga corrispondente nel `.env` |
+| `VAPID_PRIVATE_KEY` | idem |
+| `VAPID_SUBJECT` | `mailto:alefalco28@gmail.com` |
+
+Senza questi il digest funziona lo stesso: semplicemente non manda avvisi.
+
+## 16. Attivale sul telefono
+
+**Su iPhone l’app deve essere installata sulla schermata Home.** Dal browser
+Safari le notifiche non funzionano proprio, e non e’ un difetto dell’app: Apple
+le concede solo alle web app installate.
+
+1. Apri NewsDigest **dall’icona sulla schermata Home**, non da Safari.
+2. **Impostazioni** → *Notifiche* → **Attiva le notifiche**.
+3. iOS chiede il permesso: concedilo. Compare solo se premi tu il pulsante, non
+   si puo’ chiedere da soli.
+4. Premi **Mandami una notifica di prova**: deve arrivare subito.
+
+La prova verifica il permesso, il service worker e l’aspetto dell’avviso su quel
+telefono. **Non** verifica l’invio dal server: quello viaggia dalla pipeline, e a
+provarlo e’ il primo digest vero — o il pulsante *Aggiorna adesso*.
+
+L’attivazione vale **per dispositivo**: se usi l’app anche sul PC, li’ va
+attivata di nuovo.
+
+Se hai rifiutato il permesso per sbaglio, il pulsante non basta piu’: si
+riattiva da Impostazioni di iOS → NewsDigest → Notifiche.
+
+Le iscrizioni che smettono di funzionare — app disinstallata, telefono
+cambiato — vengono cancellate da sole: il servizio di push risponde 404 o 410 e
+la pipeline toglie la riga.
 
 # Comandi utili
 

@@ -178,7 +178,11 @@ const NAV = [
       }
       .topbar {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr) 44px;
+        /* Equal side columns, so the title sits on the middle of the screen and
+           not on the middle of what is left over. With the language toggle
+           wider than the theme button, giving the title the flexible column
+           pushed it visibly to the right. */
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
         align-items: center;
         gap: 10px;
         position: fixed;
@@ -192,14 +196,8 @@ const NAV = [
         -webkit-backdrop-filter: blur(16px) saturate(1.4);
         border-bottom: 1px solid var(--border);
       }
-      /* Safari composites the children of a -webkit-backdrop-filter element
-         into the blurred layer itself unless they sit on their own plane, which
-         smears their top edge. Lifting them one step is the whole fix. */
-      .topbar > * {
-        position: relative;
-        z-index: 1;
-      }
       .tb-title {
+        min-width: 0;
         font-family: var(--font-display);
         font-weight: 700;
         font-size: 1.05rem;
@@ -213,6 +211,7 @@ const NAV = [
         text-overflow: ellipsis;
       }
       .tb-theme {
+        justify-self: end;
         display: inline-flex;
         align-items: center;
         justify-content: center;

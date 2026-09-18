@@ -33,6 +33,7 @@ import { writeStories } from './summarize.ts';
 import { attachImages } from './image.ts';
 import { digestState, saveDigest } from './save.ts';
 import { cleanup } from './cleanup.ts';
+import { initPush, notify } from './push.ts';
 import { renderSummary, renderTopic, startFile } from './render.ts';
 import { detail, fail, heading, reason, step, warn } from './log.ts';
 import {
@@ -171,6 +172,17 @@ async function runProfile(profile: Profile, options: Options, date: string): Pro
     results,
     failedTopics: failed,
   });
+  // Sent after the save, never before: a notification promising news that is
+  // not there yet is worse than one that arrives a second late.
+  if (saved.stories) {
+    await notify({
+      userId: profile.id,
+      language: profile.language,
+      stories: saved.stories,
+      topics: results.filter((r) => r.stories.length).length,
+    }).catch((error: unknown) => warn(`notifiche: ${reason(error)}`));
+  }
+
   return saved.stories;
 }
 
@@ -179,6 +191,7 @@ async function main(): Promise<void> {
   const config = loadConfig();
   initFirestore(config.serviceAccount);
   initGemini(config.geminiApiKey);
+  if (config.push) initPush(config.push.publicKey, config.push.privateKey, config.push.subject);
 
   const date = romeDate();
   const file = startFile();

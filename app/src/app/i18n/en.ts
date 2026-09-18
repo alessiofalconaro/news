@@ -130,7 +130,18 @@ export const en: Dictionary = {
     refreshCancel: 'Cancel the request',
     refreshError: 'I could not send the request.',
     notifications: 'Notifications',
-    notificationsComingSoon: 'Notifications arrive in Phase 5.',
+    notificationsHint: 'A heads-up on your phone when the digest is ready.',
+    notificationsOn: 'On for this device',
+    notificationsEnable: 'Turn notifications on',
+    notificationsDisable: 'Turn off',
+    notificationsTest: 'Send me a test notification',
+    notificationsTestTitle: 'NewsDigest',
+    notificationsTestBody: 'If you can read this, notifications work.',
+    notificationsDenied:
+      'You refused them. To allow again: iOS Settings → NewsDigest → Notifications.',
+    notificationsUnsupported:
+      'This browser does not support them. On iPhone, add the app to the Home Screen first and open it from there.',
+    notificationsNotConfigured: 'Not set up yet: the VAPID key is missing (README step 15).',
     account: 'Account',
   },
 };
