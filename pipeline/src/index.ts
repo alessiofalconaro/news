@@ -35,7 +35,7 @@ import { digestState, saveDigest } from './save.ts';
 import { cleanup } from './cleanup.ts';
 import { renderSummary, renderTopic, startFile } from './render.ts';
 import { detail, fail, heading, reason, step, warn } from './log.ts';
-import { dueSlot, romeDate, romeHour } from './time.ts';
+import { dueSlot, onDemandSlot, romeDate, romeHour } from './time.ts';
 import type { Profile, TopicResult } from './types.ts';
 
 interface Options {
@@ -98,16 +98,25 @@ async function runProfile(profile: Profile, options: Options, date: string): Pro
 
   if (!options.dryRun && !options.force) {
     onDemand = await pendingRequest(profile.id);
-    if (!onDemand) {
-      const state = await digestState(profile.id, date);
+    const state = await digestState(profile.id, date);
+
+    if (onDemand) {
+      // Counts as the round that was about to happen, when one is close, so
+      // asking just before it brings it forward instead of doubling it.
+      slot = onDemandSlot(profile.digestHours, state.doneHours);
+      const brought = slot !== romeHour();
+      step(
+        brought
+          ? `richiesto dall'app: anticipo la tornata delle ${slot}:00`
+          : "richiesto dall'app: costruisco adesso",
+      );
+    } else {
       const due = dueSlot(profile.digestHours, state.doneHours);
       if (due === null) {
         step(`non e' la sua ora: a Roma sono le ${romeHour()}:00`);
         return 0;
       }
       slot = due;
-    } else {
-      step('richiesto dall\'app: costruisco adesso');
     }
   }
 

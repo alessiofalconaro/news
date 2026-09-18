@@ -124,7 +124,7 @@ export const it = {
     digestNone: 'Nessuna',
     refresh: 'Aggiorna adesso',
     refreshHint:
-      'Chiede le notizie fuori orario. Non e’ immediato: il digest viene preparato entro un’ora.',
+      'Chiede le notizie fuori orario. Non e’ immediato: il digest viene preparato entro mezz’ora.',
     refreshPending: 'Richiesta in corso…',
     refreshCancel: 'Annulla la richiesta',
     refreshError: 'Non sono riuscito a inviare la richiesta.',

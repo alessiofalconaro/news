@@ -55,6 +55,29 @@ export function dueSlot(
   return due.length ? Math.max(...due) : null;
 }
 
+/**
+ * Which round an on-demand request counts as.
+ *
+ * Asking for the news shortly before a scheduled round should bring that round
+ * forward, not add one: without this, pressing the button at five past nine
+ * with a ten o'clock round would build at half past nine and then again at ten,
+ * the second time with almost nothing new to say, which reads as a fault.
+ *
+ * A round further off than two hours is left alone: an afternoon request has
+ * nothing to do with the evening one, and should not swallow it.
+ */
+export function onDemandSlot(
+  digestHours: number[],
+  doneHours: number[],
+  at: Date = new Date(),
+): number {
+  const hour = romeHour(at);
+  const soon = digestHours
+    .filter((slot) => !doneHours.includes(slot))
+    .filter((slot) => slot >= hour && slot <= hour + 2);
+  return soon.length ? Math.min(...soon) : hour;
+}
+
 export function hoursAgo(hours: number, from: Date = new Date()): Date {
   return new Date(from.getTime() - hours * 3_600_000);
 }

@@ -296,7 +296,7 @@ La seconda tornata **si aggiunge** alla prima, non la sostituisce: Oggi resta
 una pagina sola che si riempie durante la giornata. E non ripete le stesse
 notizie, perche' gli articoli gia' usati restano esclusi per una settimana.
 
-Come funziona: il workflow si sveglia ogni ora e costruisce solo per chi ha una
+Come funziona: il workflow si sveglia ogni mezzora e costruisce solo per chi ha una
 tornata dovuta in quel momento. Ogni tornata resta dovuta per due ore, ed e' la
 rete di sicurezza: se un'esecuzione fallisce, la sveglia dell'ora dopo rimedia.
 
@@ -305,7 +305,7 @@ l'Italia a UTC+1 d'inverno e UTC+2 d'estate bastano a servire qualunque ora fra
 le 6 e le 22 in entrambe le stagioni.
 
 **Quanto consuma.** Un'esecuzione a vuoto dura pochi secondi ma viene contata
-come un minuto: 18 al giorno fanno circa 540 minuti al mese, sui **2000
+come un minuto: 36 al giorno fanno circa 1080 minuti al mese, sui **2000
 inclusi** nel piano gratuito per i repository privati. Senza una carta
 registrata, a minuti esauriti i job vengono **bloccati, non addebitati**: non
 puo' partire nessun pagamento. Conviene attivare le email di avviso al 90% e al
@@ -316,12 +316,12 @@ puo' partire nessun pagamento. Conviene attivare le email di avviso al 90% e al
 Dentro l’app, in **Impostazioni** → *Aggiorna adesso*. Funziona per chiunque usi
 l’app, anche per chi non ha accesso al repository su GitHub.
 
-**Non e’ istantaneo:** il digest viene preparato entro un’ora. Il motivo e’ che le
+**Non e’ istantaneo:** il digest viene preparato entro mezzora. Il motivo e’ che le
 notizie non le costruisce l’app ma uno script che gira sui computer di GitHub,
 e per farlo partire da dentro l’app servirebbe una chiave di GitHub scritta
 nella pagina — leggibile da chiunque apra il sito, visto che il codice e’
 pubblico anche se i dati non lo sono. Quindi l’app lascia una richiesta nel
-database, e la sveglia oraria successiva la raccoglie e costruisce fuori orario.
+database, e la sveglia successiva, entro mezzora, la raccoglie e costruisce fuori orario.
 
 Il pulsante resta segnato *Richiesta in corso* finche’ la pipeline non la
 raccoglie, e si puo’ annullare. Una richiesta piu’ vecchia di sei ore viene

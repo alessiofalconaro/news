@@ -120,7 +120,7 @@ export const en: Dictionary = {
     digestNone: 'None',
     refresh: 'Refresh now',
     refreshHint:
-      'Asks for the news outside the schedule. Not instant: the digest is built within the hour.',
+      'Asks for the news outside the schedule. Not instant: the digest is built within half an hour.',
     refreshPending: 'Request in progress…',
     refreshCancel: 'Cancel the request',
     refreshError: 'I could not send the request.',
