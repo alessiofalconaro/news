@@ -51,6 +51,7 @@ export const en: Dictionary = {
     notReadyBody: 'Today’s stories are prepared every morning around 10:30.',
     partial: (topics: string) => `Some topics could not be processed: ${topics}.`,
     noStories: 'Nothing relevant today',
+    storyCount: (n: number) => (n === 1 ? '1 story' : `${n} stories`),
     sources: (n: number) => (n === 1 ? '1 source' : `${n} sources`),
     readArticle: 'Read the article',
     errorTitle: 'I cannot load the digest',

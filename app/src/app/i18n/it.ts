@@ -55,6 +55,7 @@ export const it = {
     notReadyBody: 'Le notizie di oggi vengono preparate ogni mattina intorno alle 10:30.',
     partial: (topics: string) => `Alcuni topic non sono stati elaborati: ${topics}.`,
     noStories: 'Niente di rilevante oggi',
+    storyCount: (n: number) => (n === 1 ? '1 notizia' : `${n} notizie`),
     sources: (n: number) => (n === 1 ? '1 fonte' : `${n} fonti`),
     readArticle: 'Leggi l’articolo',
     errorTitle: 'Non riesco a caricare il digest',

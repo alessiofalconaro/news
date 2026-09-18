@@ -1,7 +1,7 @@
 import { Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { I18n } from '../i18n/i18n.service';
 import { DigestService } from '../digest/digest.service';
-import { StoryCard } from '../digest/story-card';
+import { TopicSections } from '../digest/topic-sections';
 import type { Story } from '../core/models';
 
 /** `YYYY-MM-DD` in Rome, the shape the pipeline writes as `digestDate`. */
@@ -19,7 +19,7 @@ function romeToday(): string {
  */
 @Component({
   selector: 'app-today',
-  imports: [StoryCard],
+  imports: [TopicSections],
   template: `
     <h1>{{ t().today.title }}</h1>
     <p class="date">{{ i18n.fullDate(now) }}</p>
@@ -51,11 +51,7 @@ function romeToday(): string {
           <p>{{ t().today.notReadyBody }}</p>
         </div>
       } @else {
-        <div class="stories">
-          @for (story of stories(); track story.id) {
-            <app-story-card [story]="story" />
-          }
-        </div>
+        <app-topic-sections [stories]="stories()" />
       }
     }
   `,
@@ -78,11 +74,6 @@ function romeToday(): string {
         font-family: ui-monospace, monospace;
         font-size: 0.8rem;
         color: var(--text-dim);
-      }
-      .stories {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
       }
     `,
   ],

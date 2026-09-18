@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "icons": "node tools/generate-icons.mjs"
+    "icons": "node tools/generate-icons.mjs",
+    "postbuild": "node tools/stamp-service-worker.mjs"
   },
   "private": true,
   "packageManager": "npm@11.6.2",

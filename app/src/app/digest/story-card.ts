@@ -3,45 +3,48 @@ import { I18n } from '../i18n/i18n.service';
 import type { Story } from '../core/models';
 
 /**
- * One story.
+ * One story: text on the left, thumbnail on the right.
  *
- * The picture is optional by design - it illustrates the subject rather than
- * the event, and for plenty of stories there is none - so the layout is built
- * around its absence and merely accommodates its presence. A card that only
- * looks right with an image would look broken most mornings.
+ * Sideways rather than a picture on top, so a topic's stories read as a list
+ * you can scan down instead of a column of posters you have to scroll through.
+ * The thumbnail is a fixed square: pictures come from Wikipedia at every shape
+ * imaginable, and letting each set its own height turns the list into a ragged
+ * staircase.
+ *
+ * The picture is optional by design - plenty of stories have no subject worth
+ * illustrating - so the layout is built around its absence and merely
+ * accommodates its presence.
  */
 @Component({
   selector: 'app-story-card',
   template: `
-    <article class="card">
-      @if (story().imageUrl && !imageFailed()) {
-        <div class="shot">
-          <img
-            [src]="story().imageUrl"
-            [alt]="headline()"
-            loading="lazy"
-            decoding="async"
-            (error)="imageFailed.set(true)"
-          />
-        </div>
-      }
-
-      <div class="body">
-        <div class="meta">
-          <span class="topic">{{ story().topicName }}</span>
-          <span class="dot-sep">·</span>
-          <span>{{ t().today.sources(story().sourceCount) }}</span>
+    <article class="card" [style.--accent]="accent()">
+      <div class="inner">
+        <div class="text">
+          <h2>{{ headline() }}</h2>
+          <p class="summary">{{ summary() }}</p>
         </div>
 
-        <h2>{{ headline() }}</h2>
-        <p class="summary">{{ summary() }}</p>
+        @if (story().imageUrl && !imageFailed()) {
+          <div class="shot">
+            <img
+              [src]="story().imageUrl"
+              alt=""
+              loading="lazy"
+              decoding="async"
+              (error)="imageFailed.set(true)"
+            />
+          </div>
+        }
+      </div>
 
-        <div class="foot">
-          <a class="btn btn-primary read" [href]="story().primaryUrl" target="_blank" rel="noopener">
-            {{ t().today.readArticle }}
-          </a>
-          <span class="when">{{ i18n.time(published()) }}</span>
-        </div>
+      <div class="foot">
+        <a class="read" [href]="story().primaryUrl" target="_blank" rel="noopener">
+          {{ t().today.readArticle }} ›
+        </a>
+        <span class="meta">
+          {{ t().today.sources(story().sourceCount) }} · {{ i18n.time(published()) }}
+        </span>
       </div>
     </article>
   `,
@@ -51,13 +54,38 @@ import type { Story } from '../core/models';
         display: block;
       }
       .card {
-        padding: 0;
-        overflow: hidden;
+        padding: 14px;
+        /* The topic's colour, carried in from the section that owns the story. */
+        border-left: 3px solid var(--accent, var(--border));
       }
-      /* Fixed ratio: pictures come from Wikipedia at every shape imaginable and
-         a row of cards that each set their own height reads as a broken grid. */
+      .inner {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .text {
+        min-width: 0;
+        flex: 1;
+      }
+      h2 {
+        font-family: var(--font-display);
+        font-size: 1.05rem;
+        line-height: 1.32;
+        letter-spacing: -0.01em;
+        margin-bottom: 6px;
+      }
+      .summary {
+        margin: 0;
+        color: var(--text-soft);
+        line-height: 1.5;
+        font-size: 0.88rem;
+      }
       .shot {
-        aspect-ratio: 16 / 9;
+        flex: none;
+        width: 84px;
+        height: 84px;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
         background: var(--surface-2);
       }
       .shot img {
@@ -66,51 +94,38 @@ import type { Story } from '../core/models';
         object-fit: cover;
         display: block;
       }
-      .body {
-        padding: 16px;
-      }
-      .meta {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.76rem;
-        color: var(--text-dim);
-        margin-bottom: 8px;
-      }
-      .topic {
-        color: var(--brand);
-        font-weight: 700;
-      }
-      h2 {
-        font-family: var(--font-display);
-        font-size: 1.16rem;
-        line-height: 1.3;
-        letter-spacing: -0.01em;
-        margin-bottom: 8px;
-      }
-      .summary {
-        margin: 0;
-        color: var(--text-soft);
-        line-height: 1.55;
-        font-size: 0.94rem;
-      }
       .foot {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        margin-top: 14px;
+        margin-top: 12px;
       }
       .read {
-        min-height: 40px;
-        padding: 8px 14px;
-        font-size: 0.85rem;
+        color: var(--accent, var(--brand));
+        font-size: 0.84rem;
+        font-weight: 700;
         text-decoration: none;
+        /* Comfortably tappable without a button's worth of chrome. */
+        padding: 6px 0;
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
       }
-      .when {
-        font-size: 0.76rem;
+      .meta {
+        font-size: 0.74rem;
         color: var(--text-dim);
         white-space: nowrap;
+      }
+
+      @media (min-width: 600px) {
+        .shot {
+          width: 104px;
+          height: 104px;
+        }
+        h2 {
+          font-size: 1.12rem;
+        }
       }
     `,
   ],
@@ -120,6 +135,7 @@ export class StoryCard {
   readonly t = this.i18n.t;
 
   readonly story = input.required<Story>();
+  readonly accent = input<string>('');
 
   /** A Wikipedia URL can rot; a broken image icon is worse than no image. */
   readonly imageFailed = signal(false);

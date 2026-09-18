@@ -1,7 +1,7 @@
 import { Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { I18n } from '../i18n/i18n.service';
 import { DigestService } from '../digest/digest.service';
-import { StoryCard } from '../digest/story-card';
+import { TopicSections } from '../digest/topic-sections';
 import type { Digest, Story } from '../core/models';
 
 /** `YYYY-MM-DD` in Rome, so today can be told apart from the rest. */
@@ -23,7 +23,7 @@ function parseDate(date: string): Date {
  */
 @Component({
   selector: 'app-archive',
-  imports: [StoryCard],
+  imports: [TopicSections],
   template: `
     <h1>{{ t().archive.title }}</h1>
 
@@ -50,9 +50,7 @@ function parseDate(date: string): Date {
                 <p class="loading">{{ t().today.noStories }}</p>
               } @else {
                 <div class="stories">
-                  @for (story of stories(); track story.id) {
-                    <app-story-card [story]="story" />
-                  }
+                  <app-topic-sections [stories]="stories()" />
                 </div>
               }
             }
