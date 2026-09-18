@@ -58,6 +58,10 @@ export const it = {
     storyCount: (n: number) => (n === 1 ? '1 notizia' : `${n} notizie`),
     sources: (n: number) => (n === 1 ? '1 fonte' : `${n} fonti`),
     readArticle: 'Leggi l’articolo',
+    sourcesTitle: 'Le fonti di questa notizia',
+    sourcesBody:
+      'Le testate che hanno raccontato lo stesso fatto. «Leggi l’articolo» apre quella che l’AI ha giudicato più completa; qui ci sono tutte.',
+    sourcesPrimary: 'Scelta come principale',
     layoutToList: 'Vedi in elenco',
     layoutToCards: 'Vedi una per volta',
     errorTitle: 'Non riesco a caricare il digest',

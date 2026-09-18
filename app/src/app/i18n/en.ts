@@ -54,6 +54,10 @@ export const en: Dictionary = {
     storyCount: (n: number) => (n === 1 ? '1 story' : `${n} stories`),
     sources: (n: number) => (n === 1 ? '1 source' : `${n} sources`),
     readArticle: 'Read the article',
+    sourcesTitle: 'The sources for this story',
+    sourcesBody:
+      'The outlets that covered the same event. “Read the article” opens the one the AI judged most complete; here they all are.',
+    sourcesPrimary: 'Picked as the main one',
     layoutToList: 'Show as a list',
     layoutToCards: 'Show one at a time',
     errorTitle: 'I cannot load the digest',
