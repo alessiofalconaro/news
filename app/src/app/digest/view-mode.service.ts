@@ -32,6 +32,10 @@ export class ViewModeService {
   set(mode: ViewMode): void {
     this.mode.set(mode);
   }
+
+  toggle(): void {
+    this.mode.set(this.mode() === 'list' ? 'cards' : 'list');
+  }
 }
 
 function read(): ViewMode {

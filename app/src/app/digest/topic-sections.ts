@@ -181,15 +181,28 @@ export class TopicSections {
       group.stories.push(story);
     }
 
-    // Newest first inside a topic. Stories arrive ordered by rank, which grows
-    // round after round, so across a day of several rounds the times ended up
-    // interleaved: rank 1 at 17:54 followed by rank 43 at 21:08.
+    // Inside a topic: newest round first, and within a round the order the AI
+    // ranked them in. Ranking by importance beats ranking by the clock, since
+    // a round's stories are all from the same few hours anyway; ordering them
+    // by time only scattered the good ones among the minor ones.
     for (const group of byKey.values()) {
-      group.stories.sort((a, b) => b.latestPublishedAt - a.latestPublishedAt);
+      group.stories.sort((a, b) => (b.slot ?? 0) - (a.slot ?? 0) || a.rank - b.rank);
     }
 
-    return [...byKey.values()];
+    // Sections follow the order the reader arranged the topics in, on the
+    // Topics page. Before this they came out in whatever order the stories
+    // happened to be in, so the topic someone had put first could appear third.
+    return [...byKey.values()].sort((a, b) => this.position(a) - this.position(b));
   });
+
+  /**
+   * Where a topic sits in the reader's own list. Ones that no longer exist -
+   * the archive outlives them - go last rather than jumping to the front.
+   */
+  private position(group: TopicGroup): number {
+    const index = this.topics.topics().findIndex((t) => t.id === group.key);
+    return index >= 0 ? index : Number.MAX_SAFE_INTEGER;
+  }
 
   /** The live topic's colour where it still exists, so the app agrees with itself. */
   private colorFor(story: Story): string {

@@ -2,6 +2,7 @@ import { Component, OnDestroy, computed, effect, inject, signal } from '@angular
 import { I18n } from '../i18n/i18n.service';
 import { DigestService } from '../digest/digest.service';
 import { TopicSections } from '../digest/topic-sections';
+import { ViewModeService } from '../digest/view-mode.service';
 import type { Story } from '../core/models';
 
 /** `YYYY-MM-DD` in Rome, the shape the pipeline writes as `digestDate`. */
@@ -21,8 +22,19 @@ function romeToday(): string {
   selector: 'app-today',
   imports: [TopicSections],
   template: `
-    <h1>{{ t().today.title }}</h1>
-    <p class="date">{{ i18n.fullDate(now) }}</p>
+    <header class="head">
+      <div>
+        <h1>{{ t().today.title }}</h1>
+        <p class="date">{{ i18n.fullDate(now) }}</p>
+      </div>
+
+      <!-- The layout switch lives here rather than in settings: it is something
+           you change while reading, looking at the result, not something you go
+           and configure beforehand. -->
+      <button class="layout" (click)="viewMode.toggle()" [attr.aria-label]="layoutLabel()">
+        {{ viewMode.mode() === 'list' ? '⇆' : '☰' }}
+      </button>
+    </header>
 
     @if (digests.error() || storiesError()) {
       <div class="empty-state card">
@@ -62,6 +74,26 @@ function romeToday(): string {
         max-width: 720px;
         margin: 0 auto;
       }
+      .head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .layout {
+        flex: none;
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text-soft);
+        font-size: 1.05rem;
+        line-height: 1;
+      }
+      .layout:active {
+        background: var(--surface-2);
+      }
       .date {
         margin: 4px 0 20px;
         color: var(--text-soft);
@@ -82,8 +114,13 @@ export class TodayPage implements OnDestroy {
   readonly i18n = inject(I18n);
   readonly t = this.i18n.t;
   readonly digests = inject(DigestService);
+  readonly viewMode = inject(ViewModeService);
 
   readonly now = new Date();
+
+  readonly layoutLabel = computed(() =>
+    this.viewMode.mode() === 'list' ? this.t().today.layoutToCards : this.t().today.layoutToList,
+  );
   readonly digest = computed(() => this.digests.forDate(romeToday()));
 
   readonly stories = signal<Story[]>([]);
