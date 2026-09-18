@@ -124,7 +124,10 @@ export const it = {
     themeDark: 'Scuro',
     themeLight: 'Chiaro',
     digestTime: 'Ora del digest',
-    digestTimeHint: 'A che ora vuoi trovare le notizie pronte. Vale solo per te.',
+    digestTimeHint:
+      'A che ora vuoi trovare le notizie pronte, in ora italiana. Vale solo per te.',
+    digestTimeAway: (times: string) =>
+      `Sei in un fuso diverso da quello italiano: dove ti trovi ora arrivano verso le ${times}.`,
     digestFirst: 'Prima tornata',
     digestSecond: 'Seconda tornata',
     digestNone: 'Nessuna',

@@ -75,3 +75,26 @@ export function nextWakeUp(at: Date = new Date()): Date {
   }
   return next;
 }
+
+/** True when the device is somewhere the digest hours do not read literally. */
+export function awayFromItaly(): boolean {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone !== 'Europe/Rome';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The instant at which the clock in Rome next reads `hour:00`.
+ *
+ * The schedule is anchored to Italian time, wherever the reader happens to be:
+ * a digest at ten means ten in Italy. Formatting this instant with the device's
+ * own clock is what turns that into something a traveller can act on - four in
+ * the morning in New York - instead of a number that quietly means nothing
+ * local.
+ */
+export function romeHourAsInstant(hour: number, at: Date = new Date()): Date {
+  const minutesFromNow = hour * 60 - romeMinutesNow(at);
+  return new Date(at.getTime() + minutesFromNow * 60_000);
+}

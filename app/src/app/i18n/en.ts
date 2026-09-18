@@ -120,7 +120,9 @@ export const en: Dictionary = {
     themeDark: 'Dark',
     themeLight: 'Light',
     digestTime: 'Digest time',
-    digestTimeHint: 'When you want the news ready. It applies to you only.',
+    digestTimeHint: 'When you want the news ready, in Italian time. It applies to you only.',
+    digestTimeAway: (times: string) =>
+      `You are in a different time zone: where you are now they arrive around ${times}.`,
     digestFirst: 'First round',
     digestSecond: 'Second round',
     digestNone: 'None',

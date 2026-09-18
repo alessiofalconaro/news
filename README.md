@@ -425,7 +425,9 @@ Se lo lanci **senza** la spunta e non sono le 10-12 in Italia, scrive
 ## A che ora arriva
 
 L'ora si sceglie **dall'app**, in Impostazioni → *Ora del digest*, fra le 6 e
-le 22. Puoi chiederne **una o due al giorno**: per esempio la mattina e la
+le 22, ed è sempre **ora italiana**: il digest delle 10:00 arriva alle 10:00 in
+Italia anche se sei dall'altra parte del mondo. Se il telefono è su un altro
+fuso, l'app scrive lì sotto a che ora corrispondono dove ti trovi. Puoi chiederne **una o due al giorno**: per esempio la mattina e la
 sera. Vale solo per chi la imposta, quindi tu e il tuo amico potete avere orari
 diversi.
 
