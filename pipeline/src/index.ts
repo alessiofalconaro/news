@@ -19,9 +19,11 @@ import { describeModel, initGemini } from './gemini.ts';
 import {
   activeTopics,
   allProfiles,
+  clearRequest,
   dropRecentlySeen,
   findProfileByEmail,
   initFirestore,
+  pendingRequest,
 } from './firestore.ts';
 import { collectArticles } from './feeds.ts';
 import { resolveQuery } from './query.ts';
@@ -86,19 +88,32 @@ async function runProfile(profile: Profile, options: Options, date: string): Pro
   step(`account ${profile.email}, lingua ${profile.language}, digest alle ${when}`);
 
   // The workflow wakes hourly for everyone; each account is served at its own
-  // hours, and each round only once a day. --force means "now, whatever the
-  // clock says and whatever has already been built" - which is what makes the
-  // manual button on GitHub useful for checking a change to a topic.
+  // hours, and each round only once a day.
+  //
+  // Two things override that. --force, for a manual run from GitHub, and a
+  // request left in the app by whoever wants their news now - which is the
+  // only route available to someone who has no access to the repository.
   let slot = romeHour();
+  let onDemand = false;
+
   if (!options.dryRun && !options.force) {
-    const state = await digestState(profile.id, date);
-    const due = dueSlot(profile.digestHours, state.doneHours);
-    if (due === null) {
-      step(`non e' la sua ora: a Roma sono le ${romeHour()}:00`);
-      return 0;
+    onDemand = await pendingRequest(profile.id);
+    if (!onDemand) {
+      const state = await digestState(profile.id, date);
+      const due = dueSlot(profile.digestHours, state.doneHours);
+      if (due === null) {
+        step(`non e' la sua ora: a Roma sono le ${romeHour()}:00`);
+        return 0;
+      }
+      slot = due;
+    } else {
+      step('richiesto dall\'app: costruisco adesso');
     }
-    slot = due;
   }
+
+  // Cleared up front, and not at the end: a run that fails partway must not
+  // leave the request standing, or every later wake-up would rebuild forever.
+  if (onDemand) await clearRequest(profile.id);
 
   const topics = await activeTopics(profile.id);
   if (!topics.length) {

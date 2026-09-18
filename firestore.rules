@@ -92,6 +92,18 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // "Le notizie adesso": the app leaves a request here and the pipeline picks
+    // it up at its next wake-up, then deletes it. One document per account, so
+    // pressing the button twice cannot queue two digests. The browser can ask
+    // and can withdraw, but only for itself.
+    match /digestRequests/{uid} {
+      allow read, delete: if allowed() && owns(uid);
+      allow create: if allowed() && owns(uid)
+        && request.resource.data.userId == uid
+        && request.resource.data.requestedAt is int;
+      allow update: if false;
+    }
+
     // Pure bookkeeping for the pipeline: the browser never needs to see it.
     match /seenArticles/{articleId} {
       allow read, write: if false;

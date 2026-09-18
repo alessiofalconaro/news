@@ -151,3 +151,22 @@ export async function dropRecentlySeen(topicId: string, articles: Article[]): Pr
 export async function saveAutoQuery(topicId: string, query: string, mark: string): Promise<void> {
   await database().collection('topics').doc(topicId).set({ autoQuery: query, autoQueryFor: mark }, { merge: true });
 }
+
+/**
+ * An on-demand request, if this account left one and it is still fresh.
+ *
+ * Stale requests are ignored rather than honoured: one left at midnight by an
+ * app that was then closed should not produce a surprise digest at six in the
+ * morning, ahead of the round the reader actually asked for.
+ */
+export async function pendingRequest(userId: string): Promise<boolean> {
+  const doc = await database().collection('digestRequests').doc(userId).get();
+  if (!doc.exists) return false;
+  const at = Number(doc.data()?.['requestedAt'] ?? 0);
+  return Date.now() - at < 6 * 3_600_000;
+}
+
+/** Cleared whether or not it produced anything, so it cannot fire twice. */
+export async function clearRequest(userId: string): Promise<void> {
+  await database().collection('digestRequests').doc(userId).delete();
+}

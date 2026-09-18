@@ -313,16 +313,22 @@ puo' partire nessun pagamento. Conviene attivare le email di avviso al 90% e al
 
 ## Le notizie adesso, senza aspettare
 
-Serve dopo aver modificato un topic, per vedere subito se la modifica ha reso.
+Dentro l’app, in **Impostazioni** → *Aggiorna adesso*. Funziona per chiunque usi
+l’app, anche per chi non ha accesso al repository su GitHub.
 
-Da GitHub, anche dal telefono: **Actions** → *Digest quotidiano* → **Run
-workflow**, con la spunta su *Lancia subito*. Ignora sia l'orario sia le
-tornate gia' fatte, e costruisce.
+**Non e’ istantaneo:** il digest viene preparato entro un’ora. Il motivo e’ che le
+notizie non le costruisce l’app ma uno script che gira sui computer di GitHub,
+e per farlo partire da dentro l’app servirebbe una chiave di GitHub scritta
+nella pagina — leggibile da chiunque apra il sito, visto che il codice e’
+pubblico anche se i dati non lo sono. Quindi l’app lascia una richiesta nel
+database, e la sveglia oraria successiva la raccoglie e costruisce fuori orario.
 
-Non c'e' un pulsante dentro l'app, e non e' una dimenticanza: per far partire
-il workflow servirebbe una chiave di GitHub dentro la pagina, e tutto quello
-che sta nella pagina e' leggibile da chiunque apra il sito. L'alternativa,
-una funzione sul server, richiede il piano a pagamento di Firebase.
+Il pulsante resta segnato *Richiesta in corso* finche’ la pipeline non la
+raccoglie, e si puo’ annullare. Una richiesta piu’ vecchia di sei ore viene
+ignorata, per non trovarsi un digest a sorpresa la mattina dopo.
+
+Se invece il repository lo apri tu, la via immediata resta **Actions** →
+*Digest quotidiano* → **Run workflow** con la spunta.
 
 ## Se modifichi un topic
 

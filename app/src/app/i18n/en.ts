@@ -118,6 +118,12 @@ export const en: Dictionary = {
     digestFirst: 'First round',
     digestSecond: 'Second round',
     digestNone: 'None',
+    refresh: 'Refresh now',
+    refreshHint:
+      'Asks for the news outside the schedule. Not instant: the digest is built within the hour.',
+    refreshPending: 'Request in progress…',
+    refreshCancel: 'Cancel the request',
+    refreshError: 'I could not send the request.',
     notifications: 'Notifications',
     notificationsComingSoon: 'Notifications arrive in Phase 5.',
     account: 'Account',

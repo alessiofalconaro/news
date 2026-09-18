@@ -3,6 +3,7 @@ import { I18n } from '../i18n/i18n.service';
 import { AuthService } from '../core/auth.service';
 import { Theme } from '../core/theme.service';
 import { ProfileService } from '../core/profile.service';
+import { RefreshService } from '../digest/refresh.service';
 import { DEFAULT_DIGEST_HOUR, MAX_DIGEST_HOUR, MIN_DIGEST_HOUR } from '../core/models';
 import { LangToggle } from '../lang-toggle';
 
@@ -56,6 +57,24 @@ import { LangToggle } from '../lang-toggle';
           </select>
         </label>
       </div>
+    </section>
+
+    <section class="card">
+      <h2>{{ t().settings.refresh }}</h2>
+      <p class="muted">{{ t().settings.refreshHint }}</p>
+
+      @if (refresh.pending()) {
+        <p class="pending">⏳ {{ t().settings.refreshPending }}</p>
+        <button class="btn" (click)="refresh.cancel()">{{ t().settings.refreshCancel }}</button>
+      } @else {
+        <button class="btn btn-primary" (click)="refresh.request()">
+          {{ t().settings.refresh }}
+        </button>
+      }
+
+      @if (refresh.error()) {
+        <p class="banner banner-error">{{ t().settings.refreshError }}</p>
+      }
     </section>
 
     <section class="card">
@@ -113,6 +132,14 @@ import { LangToggle } from '../lang-toggle';
         display: block;
         margin-bottom: 6px;
       }
+      .pending {
+        margin: 0 0 12px;
+        color: var(--warn);
+        font-size: 0.88rem;
+      }
+      .banner {
+        margin-top: 12px;
+      }
     `,
   ],
 })
@@ -121,6 +148,7 @@ export class SettingsPage {
   readonly theme = inject(Theme);
   private readonly i18n = inject(I18n);
   private readonly profiles = inject(ProfileService);
+  readonly refresh = inject(RefreshService);
   readonly t = this.i18n.t;
 
   readonly hours = Array.from(

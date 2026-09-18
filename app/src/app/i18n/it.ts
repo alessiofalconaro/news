@@ -122,6 +122,12 @@ export const it = {
     digestFirst: 'Prima tornata',
     digestSecond: 'Seconda tornata',
     digestNone: 'Nessuna',
+    refresh: 'Aggiorna adesso',
+    refreshHint:
+      'Chiede le notizie fuori orario. Non e’ immediato: il digest viene preparato entro un’ora.',
+    refreshPending: 'Richiesta in corso…',
+    refreshCancel: 'Annulla la richiesta',
+    refreshError: 'Non sono riuscito a inviare la richiesta.',
     notifications: 'Notifiche',
     notificationsComingSoon: 'Le notifiche arrivano nella Fase 5.',
     account: 'Account',
