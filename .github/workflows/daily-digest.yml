@@ -1,0 +1,58 @@
+name: Digest quotidiano
+
+# Obiettivo: le 10:30 in Italia. Il cron di GitHub ragiona in UTC e l'Italia
+# cambia ora due volte l'anno, quindi il workflow parte due volte, una per
+# fuso. Non produce due digest: lo script lavora solo se a Roma sono fra le
+# 10:00 e le 12:00, e comunque si ferma se il digest di oggi esiste gia'.
+#
+#   08:30 UTC = 10:30 con l'ora legale, 09:30 con quella solare
+#   09:30 UTC = 11:30 con l'ora legale, 10:30 con quella solare
+#
+# Quindi in estate lavora il primo avvio e il secondo trova tutto fatto; in
+# inverno il primo e' fuori finestra e lavora il secondo. L'altro fa da riserva
+# se quello di turno parte in ritardo o fallisce.
+on:
+  schedule:
+    - cron: '30 8 * * *'
+    - cron: '30 9 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Lancia subito, ignorando il controllo dell'orario"
+        type: boolean
+        default: false
+
+# Un digest per volta: due esecuzioni in parallelo scriverebbero lo stesso
+# documento, e la seconda non porterebbe niente di nuovo.
+concurrency:
+  group: daily-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    # Con dieci topic servono pochi minuti; oltre, qualcosa si e' bloccato e
+    # tenere occupato un runner non aiuta nessuno.
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # La pipeline esegue TypeScript direttamente, senza compilazione:
+          # serve un Node abbastanza recente da togliere i tipi da solo.
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: pipeline/package-lock.json
+
+      - name: Installa le dipendenze
+        working-directory: pipeline
+        run: npm ci
+
+      - name: Costruisci il digest
+        working-directory: pipeline
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: npm run digest -- ${{ inputs.force && '--force' || '' }}

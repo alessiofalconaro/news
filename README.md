@@ -11,27 +11,30 @@ fare l'app, [`DESIGN.md`](DESIGN.md) per come deve essere fatta.
 ```
 app/                  frontend Angular (la PWA)
 pipeline/             lo script che costruisce il digest
+.github/workflows/    il lancio automatico ogni mattina
 firestore-tests/      verifiche sulle regole del database
 firestore.rules       chi può leggere e scrivere cosa
 firestore.indexes.json
 firebase.json         hosting e intestazioni di sicurezza
 ```
 
-Arriverà `.github/workflows/` (Fase 4).
+## Stato: Fase 4
 
-## Stato: Fase 2
+**Fase 1** — struttura, traduzioni italiano e inglese con cambio istantaneo,
+login con Google, lista degli invitati, regole del database, gestione dei
+topic, navigazione con le quattro sezioni.
 
-Fatto nella Fase 1: struttura, traduzioni italiano e inglese con cambio
-istantaneo, login con Google, lista degli invitati, regole del database,
-gestione dei topic, navigazione con le quattro sezioni.
+**Fase 2** — la pipeline: legge i topic dal database, ricava da sola le parole
+da cercare, scarica i feed, toglie i doppioni, chiede all'AI di scegliere le
+notizie e di scriverle in italiano e inglese.
 
-Fatto nella Fase 2: la pipeline gira in locale a vuoto. Legge i topic veri
-dal database, scarica i feed, toglie i doppioni, chiede all'AI di scegliere le
-notizie e di scriverle in italiano e inglese, e stampa tutto senza salvare
-niente. Serve a giudicare se la selezione è buona prima di costruirci sopra.
+**Fase 3** — le notizie si salvano sul database e si vedono nell'app,
+raggruppate per topic e con l'immagine del soggetto quando esiste.
 
-Oggi e Archivio sono ancora segnaposto: arrivano nella Fase 3, insieme al
-salvataggio sul database.
+**Fase 4** — il digest si costruisce da solo ogni mattina, anche a computer
+spento.
+
+Manca la **Fase 5**: le notifiche push.
 
 ---
 
@@ -240,6 +243,59 @@ testata, quindi l'AI lavora su titolo, testata e orario. Funziona bene quando
 una notizia e' battuta da molte testate, perche' venti titoli sullo stesso
 fatto dicono insieme molto piu' di uno solo.
 
+
+# Il lancio automatico (Fase 4)
+
+Il digest si costruisce da solo ogni mattina su GitHub, quindi funziona anche
+se il tuo computer è spento. Il file che lo governa è
+`.github/workflows/daily-digest.yml`.
+
+**Il repository deve restare privato.** Con quello pubblico chiunque vedrebbe
+il codice: non i segreti, che stanno altrove, ma non c'è motivo di esporlo.
+
+## 13. Metti i segreti su GitHub
+
+Lo script sul server non può leggere il tuo `.env`: quei due valori vanno
+copiati anche su GitHub.
+
+1. Vai su <https://github.com/alessiofalconaro/news/settings/secrets/actions>
+2. **New repository secret**, due volte:
+
+| Name | Secret |
+|---|---|
+| `GEMINI_API_KEY` | la stessa riga che hai nel `.env` |
+| `FIREBASE_SERVICE_ACCOUNT` | tutto il contenuto del file `.json`, **senza** gli apici singoli |
+
+Gli apici nel `.env` servono a delimitare il valore per il file; qui il campo
+è già delimitato di suo, quindi mettili e il JSON risulterebbe sbagliato.
+
+## 14. Prova che funzioni
+
+Non aspettare domani mattina.
+
+1. Vai su <https://github.com/alessiofalconaro/news/actions>
+2. A sinistra scegli **Digest quotidiano** → **Run workflow**.
+3. Metti la spunta su **Lancia subito, ignorando il controllo dell'orario** e
+   conferma.
+
+Ci mette qualche minuto. Cliccando sull'esecuzione vedi gli stessi messaggi che
+vedi quando lo lanci da casa: quanti articoli ha trovato per topic, quante
+storie ha scelto, e alla fine `salvato digest ... stato ok`.
+
+Se lo lanci **senza** la spunta e non sono le 10-12 in Italia, scrive
+`fuori dalla finestra` e si ferma: è previsto, non è un errore.
+
+## Come fa a essere le 10:30
+
+Il cron di GitHub ragiona in UTC, e l'Italia cambia ora due volte l'anno.
+Quindi il workflow parte **due volte**, alle 08:30 e alle 09:30 UTC, e lo
+script lavora solo se a Roma sono fra le 10:00 e le 12:00.
+
+D'estate il primo avvio trova le 10:30 e lavora, il secondo trova il digest
+già fatto e si ferma. D'inverno il primo è fuori finestra e lavora il secondo.
+Quello che non lavora fa da riserva se l'altro parte in ritardo o fallisce.
+
+GitHub può far partire il cron con qualche minuto di ritardo: è normale.
 
 # Comandi utili
 
