@@ -5,7 +5,7 @@ import { Theme } from '../core/theme.service';
 import { ProfileService } from '../core/profile.service';
 import { RefreshService } from '../digest/refresh.service';
 import { PushService } from '../core/push.service';
-import { nextRound, wouldReplace } from '../digest/schedule';
+import { nextRound, nextWakeUp, wouldReplace } from '../digest/schedule';
 import { DEFAULT_DIGEST_HOUR, MAX_DIGEST_HOUR, MIN_DIGEST_HOUR } from '../core/models';
 import { LangToggle } from '../lang-toggle';
 
@@ -201,7 +201,7 @@ import { LangToggle } from '../lang-toggle';
 export class SettingsPage implements OnDestroy {
   readonly auth = inject(AuthService);
   readonly theme = inject(Theme);
-  private readonly i18n = inject(I18n);
+  readonly i18n = inject(I18n);
   private readonly profiles = inject(ProfileService);
   readonly refresh = inject(RefreshService);
   readonly push = inject(PushService);
@@ -227,12 +227,24 @@ export class SettingsPage implements OnDestroy {
   readonly effect = computed(() => {
     const rounds = this.slots();
     const at = this.now();
+    const t = this.t().settings;
+
     const replaced = wouldReplace(rounds, at);
-    if (replaced !== null) return this.t().settings.refreshReplaces(this.label(replaced));
     const next = nextRound(rounds, at);
-    return next === null
-      ? this.t().settings.refreshExtraOnly
-      : this.t().settings.refreshExtraWithNext(this.label(next));
+    const what =
+      replaced !== null
+        ? t.refreshReplaces(this.label(replaced))
+        : next === null
+          ? t.refreshExtraOnly
+          : t.refreshExtraWithNext(this.label(next));
+
+    // The workflow sleeps overnight, so "within half an hour" is not always
+    // true, and a button that quietly means "in seven hours" looks broken.
+    const wake = nextWakeUp(at);
+    const overnight = wake.getTime() - at.getTime() > 2 * 3_600_000;
+    const when = this.i18n.time(wake);
+
+    return what + (overnight ? t.refreshWhenTomorrow(when) : t.refreshWhen(when));
   });
 
   testNotification(): void {

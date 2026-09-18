@@ -43,3 +43,35 @@ export function nextRound(digestHours: number[], at: Date = new Date()): number 
   const later = digestHours.filter((hour) => hour * 60 > asked);
   return later.length ? Math.min(...later) : null;
 }
+
+/**
+ * Hours, in UTC, when the workflow is awake. Mirrors the cron in
+ * `.github/workflows/daily-digest.yml`, which fires on the hour and the half
+ * hour between them.
+ */
+const AWAKE_FROM_UTC = 4;
+const AWAKE_TO_UTC = 21;
+
+/**
+ * When a request made now would actually be picked up.
+ *
+ * Worth saying out loud, because the gap is not obvious: the workflow sleeps
+ * overnight, so pressing the button at five to midnight means the news arrives
+ * at six in the morning, not at midnight. A button that silently means "in
+ * seven hours" is a button that looks broken.
+ */
+export function nextWakeUp(at: Date = new Date()): Date {
+  const next = new Date(at);
+  next.setUTCSeconds(0, 0);
+  // Round up to the next half hour, always forward: asking at exactly 10:00
+  // means the 10:00 wake-up has already begun without this request.
+  next.setUTCMinutes(next.getUTCMinutes() >= 30 ? 60 : 30);
+
+  // Then walk forward until it lands in the hours the workflow is awake.
+  for (let step = 0; step < 48; step += 1) {
+    const hour = next.getUTCHours();
+    if (hour >= AWAKE_FROM_UTC && hour <= AWAKE_TO_UTC) return next;
+    next.setUTCMinutes(next.getUTCMinutes() + 30);
+  }
+  return next;
+}

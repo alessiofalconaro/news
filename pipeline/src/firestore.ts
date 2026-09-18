@@ -159,17 +159,23 @@ export async function saveAutoQuery(topicId: string, query: string, mark: string
 }
 
 /**
- * An on-demand request, if this account left one and it is still fresh.
+ * How long a request stays valid.
  *
- * Stale requests are ignored rather than honoured: one left at midnight by an
- * app that was then closed should not produce a surprise digest at six in the
- * morning, ahead of the round the reader actually asked for.
+ * Long enough to survive the night. The workflow sleeps between half past
+ * eleven and six, so a request made just before midnight has to wait six hours
+ * and five minutes for the next wake-up: at the six-hour limit this was set to
+ * at first, that request expired unread and the reader got nothing at all,
+ * without a word anywhere. Fourteen hours clears the gap with room to spare and
+ * still refuses one left days ago by an app nobody reopened.
  */
+const REQUEST_MAX_AGE_MS = 14 * 3_600_000;
+
+/** An on-demand request, if this account left one and it is still valid. */
 export async function pendingRequest(userId: string): Promise<Date | null> {
   const doc = await database().collection('digestRequests').doc(userId).get();
   if (!doc.exists) return null;
   const at = Number(doc.data()?.['requestedAt'] ?? 0);
-  return Date.now() - at < 6 * 3_600_000 ? new Date(at) : null;
+  return Date.now() - at < REQUEST_MAX_AGE_MS ? new Date(at) : null;
 }
 
 /** Cleared whether or not it produced anything, so it cannot fire twice. */

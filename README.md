@@ -90,9 +90,14 @@ essere identico all'email con cui la persona accede a Google.
 Due strade, e cambia solo la velocità.
 
 **Dall'app**, e funziona per chiunque: **Impostazioni** → **Aggiorna adesso**.
-La richiesta viene raccolta alla prossima sveglia, quindi entro mezz'ora. Sotto
-il pulsante c'è scritto se sostituirà la tornata programmata o se se ne
-aggiungerà una.
+La richiesta viene raccolta alla prossima sveglia. Sotto il pulsante l'app
+scrive due cose: se sostituirà la tornata programmata o se se ne aggiungerà
+una, e **a che ora arriveranno le notizie**.
+
+Di giorno è entro mezz'ora. Ma **di notte il sistema dorme**: fra le 23:30 e le
+06:00 non si sveglia nessuno, quindi premendo alle 23:55 le notizie arrivano
+verso le 06:00 del mattino dopo. L'app lo scrive, invece di lasciartelo
+scoprire aspettando.
 
 **Da GitHub**, e parte in pochi secondi, ma serve accesso al repository:
 <https://github.com/alessiofalconaro/news/actions/workflows/daily-digest.yml>
@@ -453,7 +458,11 @@ notizie non le costruisce l’app ma uno script che gira sui computer di GitHub,
 e per farlo partire da dentro l’app servirebbe una chiave di GitHub scritta
 nella pagina — leggibile da chiunque apra il sito, visto che il codice e’
 pubblico anche se i dati non lo sono. Quindi l’app lascia una richiesta nel
-database, e la sveglia successiva, entro mezzora, la raccoglie e costruisce fuori orario.
+database, e la sveglia successiva la raccoglie e costruisce fuori orario.
+
+Di notte, fra le 23:30 e le 06:00, il workflow non si sveglia: una richiesta
+lasciata in quelle ore viene raccolta la mattina dopo. Resta valida 14 ore, un
+margine scelto apposta per coprire il buco notturno.
 
 **Sostituisce o si aggiunge?** Dipende da quanto manca alla tornata programmata:
 

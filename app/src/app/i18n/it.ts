@@ -132,6 +132,9 @@ export const it = {
     refreshHint:
       'Chiede le notizie fuori orario. Non e’ immediato: il digest viene preparato entro mezz’ora.',
     refreshPending: 'Richiesta in corso…',
+    refreshWhen: (time: string) => ` Le notizie arrivano verso le ${time}.`,
+    refreshWhenTomorrow: (time: string) =>
+      ` Di notte il sistema dorme: le notizie arrivano domattina verso le ${time}.`,
     refreshReplaces: (hour: string) =>
       `Prenderà il posto della tornata delle ${hour}: non ne riceverai due.`,
     refreshExtraWithNext: (hour: string) =>
