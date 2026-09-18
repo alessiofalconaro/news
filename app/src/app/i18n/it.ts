@@ -114,6 +114,8 @@ export const it = {
     theme: 'Tema',
     themeDark: 'Scuro',
     themeLight: 'Chiaro',
+    digestTime: 'Ora del digest',
+    digestTimeHint: 'A che ora vuoi trovare le notizie pronte. Vale solo per te.',
     notifications: 'Notifiche',
     notificationsComingSoon: 'Le notifiche arrivano nella Fase 5.',
     account: 'Account',

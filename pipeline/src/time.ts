@@ -31,13 +31,17 @@ export function romeHour(at: Date = new Date()): number {
 }
 
 /**
- * The window the daily job is allowed to run in. Two cron entries fire, one on
- * either side of the summer time change, and the second is only a fallback -
- * this is what stops it producing a second digest hours later.
+ * Whether it is this account's turn.
+ *
+ * The workflow wakes up every hour and asks this for each account, so two
+ * people can read their news at different times. The window runs from the
+ * chosen hour to two hours later, which is what makes a failed or delayed run
+ * recoverable: the next hourly wake-up picks it up instead of the digest
+ * silently not existing that day.
  */
-export function withinDigestWindow(at: Date = new Date()): boolean {
+export function isDigestTime(digestHour: number, at: Date = new Date()): boolean {
   const hour = romeHour(at);
-  return hour >= 10 && hour < 12;
+  return hour >= digestHour && hour <= digestHour + 2;
 }
 
 export function hoursAgo(hours: number, from: Date = new Date()): Date {

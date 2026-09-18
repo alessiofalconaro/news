@@ -6,9 +6,10 @@
  *   npm run digest                                         every account
  *   npm run digest -- --force                              ignores the time window
  *
- * The daily job runs the last two. The window check is what lets the workflow
- * fire twice, on either side of the summer time change, without producing two
- * digests: the second firing finds the day's work already done and stops.
+ * The daily job runs the last two. Each account carries the hour it wants its
+ * digest, so the workflow wakes up every hour and this only builds for whoever
+ * has an appointment then - which is also what makes a failed run recoverable,
+ * since the next wake-up finds no digest and tries again.
  */
 
 import { loadConfig } from './config.ts';
@@ -30,7 +31,7 @@ import { digestAlreadyDone, saveDigest } from './save.ts';
 import { cleanup } from './cleanup.ts';
 import { renderSummary, renderTopic, startFile } from './render.ts';
 import { detail, fail, heading, reason, step, warn } from './log.ts';
-import { romeDate, withinDigestWindow } from './time.ts';
+import { isDigestTime, romeDate, romeHour } from './time.ts';
 import type { Profile, TopicResult } from './types.ts';
 
 interface Options {
@@ -79,7 +80,14 @@ async function runTopic(topic: TopicResult['topic']): Promise<TopicResult> {
 
 /** Everything for one account. Returns how many stories it produced. */
 async function runProfile(profile: Profile, options: Options, date: string): Promise<number> {
-  step(`account ${profile.email}, lingua ${profile.language}`);
+  step(`account ${profile.email}, lingua ${profile.language}, digest alle ${profile.digestHour}:00`);
+
+  // The workflow wakes hourly for everyone; each account is served at its own
+  // hour. --force is what makes a manual run ignore the appointment.
+  if (!options.dryRun && !options.force && !isDigestTime(profile.digestHour)) {
+    step(`non e' la sua ora: a Roma sono le ${romeHour()}:00`);
+    return 0;
+  }
 
   if (!options.dryRun && (await digestAlreadyDone(profile.id, date))) {
     step("il digest di oggi esiste gia' ed e' completo: salto");
@@ -125,12 +133,6 @@ async function main(): Promise<void> {
   const file = startFile();
   heading(`NewsDigest - ${options.dryRun ? 'prova a vuoto' : 'digest'} - ${date}`);
   describeModel();
-
-  // The scheduled job fires twice; only the run inside the window does the work.
-  if (!options.dryRun && !options.force && !withinDigestWindow()) {
-    step('fuori dalla finestra 10:00-12:00 in Italia: non faccio niente');
-    return;
-  }
 
   let profiles: Profile[];
   if (options.user) {

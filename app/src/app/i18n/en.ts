@@ -110,6 +110,8 @@ export const en: Dictionary = {
     theme: 'Theme',
     themeDark: 'Dark',
     themeLight: 'Light',
+    digestTime: 'Digest time',
+    digestTimeHint: 'When you want the news ready. It applies to you only.',
     notifications: 'Notifications',
     notificationsComingSoon: 'Notifications arrive in Phase 5.',
     account: 'Account',

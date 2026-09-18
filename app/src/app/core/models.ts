@@ -19,11 +19,27 @@ export const MIN_STORIES = 3;
 export const MAX_STORIES = 10;
 export const DEFAULT_STORIES = 5;
 
+/**
+ * The hours a digest can be asked for. Outside this range the workflow is not
+ * awake, so offering the choice would be a promise the app cannot keep.
+ */
+export const MIN_DIGEST_HOUR = 6;
+export const MAX_DIGEST_HOUR = 22;
+export const DEFAULT_DIGEST_HOUR = 10;
+
 export interface Profile {
   id: string;
   email: string;
   displayName: string;
   language: Lang;
+  /**
+   * Hour in Europe/Rome at which this account wants its digest, 0-23.
+   *
+   * The schedule is per account rather than per app: the workflow wakes up
+   * every hour and only builds for whoever has an appointment then, so two
+   * people sharing the app can read their news at different times.
+   */
+  digestHour: number;
   createdAt: number;
 }
 

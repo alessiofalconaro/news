@@ -1,24 +1,24 @@
 name: Digest quotidiano
 
-# Obiettivo: le 10:30 in Italia. Il cron di GitHub ragiona in UTC e l'Italia
-# cambia ora due volte l'anno, quindi il workflow parte due volte, una per
-# fuso. Non produce due digest: lo script lavora solo se a Roma sono fra le
-# 10:00 e le 12:00, e comunque si ferma se il digest di oggi esiste gia'.
+# Ogni account sceglie dall'app a che ora vuole il digest, quindi il workflow
+# si sveglia ogni ora e lo script costruisce solo per chi ha appuntamento in
+# quel momento.
 #
-#   08:30 UTC = 10:30 con l'ora legale, 09:30 con quella solare
-#   09:30 UTC = 11:30 con l'ora legale, 10:30 con quella solare
+# Le ore sono UTC. L'Italia e' UTC+1 d'inverno e UTC+2 d'estate, quindi
+# 04:00-21:00 UTC copre le 05:00-23:00 italiane: abbastanza da servire
+# qualunque ora fra le 6 e le 22, che sono quelle che l'app offre, in tutte e
+# due le stagioni. Di notte non si sveglia: sarebbero minuti spesi per niente.
 #
-# Quindi in estate lavora il primo avvio e il secondo trova tutto fatto; in
-# inverno il primo e' fuori finestra e lavora il secondo. L'altro fa da riserva
-# se quello di turno parte in ritardo o fallisce.
+# Costo: un'esecuzione a vuoto dura una manciata di secondi ma viene conteggiata
+# come un minuto, quindi 18 al giorno fanno circa 540 minuti al mese sui 2000
+# inclusi nel piano gratuito per i repository privati.
 on:
   schedule:
-    - cron: '30 8 * * *'
-    - cron: '30 9 * * *'
+    - cron: '0 4-21 * * *'
   workflow_dispatch:
     inputs:
       force:
-        description: "Lancia subito, ignorando il controllo dell'orario"
+        description: "Lancia subito, ignorando l'ora scelta"
         type: boolean
         default: false
 
@@ -36,9 +36,9 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           # La pipeline esegue TypeScript direttamente, senza compilazione:
           # serve un Node abbastanza recente da togliere i tipi da solo.

@@ -285,17 +285,28 @@ storie ha scelto, e alla fine `salvato digest ... stato ok`.
 Se lo lanci **senza** la spunta e non sono le 10-12 in Italia, scrive
 `fuori dalla finestra` e si ferma: è previsto, non è un errore.
 
-## Come fa a essere le 10:30
+## A che ora arriva
 
-Il cron di GitHub ragiona in UTC, e l'Italia cambia ora due volte l'anno.
-Quindi il workflow parte **due volte**, alle 08:30 e alle 09:30 UTC, e lo
-script lavora solo se a Roma sono fra le 10:00 e le 12:00.
+L'ora si sceglie **dall'app**, in Impostazioni → *Ora del digest*, fra le 6 e
+le 22. Vale solo per chi la imposta: tu puoi averlo alle 7 e il tuo amico alle
+19.
 
-D'estate il primo avvio trova le 10:30 e lavora, il secondo trova il digest
-già fatto e si ferma. D'inverno il primo è fuori finestra e lavora il secondo.
-Quello che non lavora fa da riserva se l'altro parte in ritardo o fallisce.
+Come funziona: il workflow si sveglia ogni ora e costruisce solo per chi ha
+appuntamento in quel momento. Se un'esecuzione fallisce o parte in ritardo, la
+sveglia dell'ora dopo se ne accorge e rimedia, perche' la finestra di ciascuno
+dura due ore.
 
-GitHub può far partire il cron con qualche minuto di ritardo: è normale.
+Di notte non si sveglia. Le ore coperte sono le 04:00-21:00 UTC, che con
+l'Italia a UTC+1 d'inverno e UTC+2 d'estate bastano a servire qualunque ora fra
+le 6 e le 22 in entrambe le stagioni.
+
+**Quanto consuma.** Un'esecuzione a vuoto dura pochi secondi ma viene contata
+come un minuto: 18 al giorno fanno circa 540 minuti al mese, sui **2000
+inclusi** nel piano gratuito per i repository privati. Senza una carta
+registrata, a minuti esauriti i job vengono **bloccati, non addebitati**: non
+puo' partire nessun pagamento. Conviene attivare le email di avviso al 90% e al
+100% nelle impostazioni di fatturazione di GitHub.
+
 
 # Comandi utili
 

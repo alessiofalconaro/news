@@ -16,6 +16,12 @@ import { seenKey } from './dedupe.ts';
 import { daysAgo } from './time.ts';
 import type { Article, Profile, Topic } from './types.ts';
 
+/** Default and clamp: a profile written before this setting existed has none. */
+function hourOf(value: unknown): number {
+  const hour = Number(value);
+  return Number.isInteger(hour) && hour >= 0 && hour <= 23 ? hour : 10;
+}
+
 let db: Firestore | null = null;
 
 export function initFirestore(serviceAccount: Record<string, unknown>): void {
@@ -45,6 +51,7 @@ export async function findProfileByEmail(email: string): Promise<Profile | null>
     email: String(data['email'] ?? ''),
     displayName: String(data['displayName'] ?? ''),
     language: data['language'] === 'en' ? 'en' : 'it',
+    digestHour: hourOf(data['digestHour']),
   };
 }
 
@@ -58,6 +65,7 @@ export async function allProfiles(): Promise<Profile[]> {
       email: String(data['email'] ?? ''),
       displayName: String(data['displayName'] ?? ''),
       language: data['language'] === 'en' ? 'en' : 'it',
+      digestHour: hourOf(data['digestHour']),
     } satisfies Profile;
   });
 }

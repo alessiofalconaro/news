@@ -25,6 +25,13 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/allowedEmails/$(email()));
     }
 
+    // Outside the hours the workflow is awake a digest would simply never be
+    // built, so the value is refused rather than silently ignored.
+    function validDigestHour(d) {
+      return !('digestHour' in d.keys())
+        || (d.digestHour is int && d.digestHour >= 6 && d.digestHour <= 22);
+    }
+
     function owns(userId) {
       return signedIn() && request.auth.uid == userId;
     }
@@ -51,10 +58,12 @@ service cloud.firestore {
       allow read: if allowed() && owns(uid);
       allow create: if allowed() && owns(uid)
         && request.resource.data.email == email()
-        && request.resource.data.language in ['it', 'en'];
+        && request.resource.data.language in ['it', 'en']
+        && validDigestHour(request.resource.data);
       allow update: if allowed() && owns(uid)
         && request.resource.data.email == resource.data.email
-        && request.resource.data.language in ['it', 'en'];
+        && request.resource.data.language in ['it', 'en']
+        && validDigestHour(request.resource.data);
       allow delete: if false;
     }
 

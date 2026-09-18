@@ -13,6 +13,8 @@ export interface Profile {
   email: string;
   displayName: string;
   language: 'it' | 'en';
+  /** Hour in Rome this account wants its digest. */
+  digestHour: number;
 }
 
 export interface Topic {

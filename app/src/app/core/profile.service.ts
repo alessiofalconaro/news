@@ -3,7 +3,7 @@ import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { AuthService } from './auth.service';
 import { I18n } from '../i18n/i18n.service';
-import { Lang, Profile } from './models';
+import { DEFAULT_DIGEST_HOUR, Lang, Profile } from './models';
 
 /**
  * The user's own document: identity plus the language the whole app runs in.
@@ -53,6 +53,13 @@ export class ProfileService {
     });
   }
 
+  /** The hour this account wants its digest, in Italian local time. */
+  async setDigestHour(hour: number): Promise<void> {
+    const profile = this.profile();
+    if (!profile) return;
+    await updateDoc(doc(db, 'profiles', profile.id), { digestHour: hour });
+  }
+
   private listen(uid: string, email: string, displayName: string): void {
     this.stopListening = onSnapshot(
       doc(db, 'profiles', uid),
@@ -82,6 +89,7 @@ export class ProfileService {
       email: email.toLowerCase(),
       displayName,
       language,
+      digestHour: DEFAULT_DIGEST_HOUR,
       createdAt: Date.now(),
     }).catch(() => {
       // Rules rejected it, which means the account is not on the allow list.
