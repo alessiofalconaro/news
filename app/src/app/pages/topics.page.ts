@@ -171,6 +171,7 @@ function emptyDraft(): Draft {
           <input type="checkbox" [(ngModel)]="draft.isActive" />
           <span>{{ t().topics.active }}</span>
         </label>
+        <p class="hint">{{ t().topics.activeHint }}</p>
 
         <details class="advanced">
           <summary>{{ t().common.advanced }}</summary>

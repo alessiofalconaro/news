@@ -83,9 +83,12 @@ export const en: Dictionary = {
     langEn: 'English',
     langBoth: 'Both',
     extraFeeds: 'Extra RSS feeds',
-    extraFeedsHint: 'One address per line. Optional.',
+    extraFeedsHint:
+      'Optional, and usually best left empty: the news already comes from Google News. Use it to follow a specific site Google overlooks. One address per line, like https://www.example.com/rss.xml.',
     maxStories: 'Stories in the digest',
     active: 'Active',
+    activeHint:
+      'Turning this off keeps the topic but leaves it out of the digest. Useful to set one aside without deleting it.',
     inactive: 'Paused',
     activeCount: (n: number, max: number) => `${n} of ${max} active topics`,
     emptyTitle: 'No topics yet',

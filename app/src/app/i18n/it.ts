@@ -87,9 +87,12 @@ export const it = {
     langEn: 'Inglese',
     langBoth: 'Entrambe',
     extraFeeds: 'Feed RSS aggiuntivi',
-    extraFeedsHint: 'Un indirizzo per riga. Opzionale.',
+    extraFeedsHint:
+      'Opzionale, e quasi sempre da lasciare vuoto: le notizie arrivano gia’ da Google News. Serve per seguire un sito preciso che Google trascura. Un indirizzo per riga, del tipo https://www.esempio.it/rss.xml.',
     maxStories: 'Notizie nel digest',
     active: 'Attivo',
+    activeHint:
+      'Se lo spegni, il topic resta salvato ma non entra nel digest. Utile per metterne uno da parte senza cancellarlo.',
     inactive: 'In pausa',
     activeCount: (n: number, max: number) => `${n} di ${max} topic attivi`,
     emptyTitle: 'Nessun topic',

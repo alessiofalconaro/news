@@ -32,22 +32,26 @@ import { LangToggle } from '../lang-toggle';
       <h2>{{ t().settings.digestTime }}</h2>
       <p class="muted">{{ t().settings.digestTimeHint }}</p>
 
+      <!-- The chosen option is marked on the option itself, not with [value] on
+           the select: the options are built by a loop, so at the moment Angular
+           would set the select's value none of them exist yet and the browser
+           quietly drops it, leaving the box showing the first hour. -->
       <div class="slots">
         <label class="slot">
           <span>{{ t().settings.digestFirst }}</span>
-          <select [value]="first()" (change)="pickFirst($event)">
+          <select (change)="pickFirst($event)">
             @for (h of hours; track h) {
-              <option [value]="h">{{ label(h) }}</option>
+              <option [value]="h" [selected]="h === first()">{{ label(h) }}</option>
             }
           </select>
         </label>
 
         <label class="slot">
           <span>{{ t().settings.digestSecond }}</span>
-          <select [value]="secondValue()" (change)="pickSecond($event)">
-            <option value="">{{ t().settings.digestNone }}</option>
+          <select (change)="pickSecond($event)">
+            <option value="" [selected]="second() === null">{{ t().settings.digestNone }}</option>
             @for (h of hours; track h) {
-              <option [value]="h">{{ label(h) }}</option>
+              <option [value]="h" [selected]="h === second()">{{ label(h) }}</option>
             }
           </select>
         </label>
@@ -128,8 +132,6 @@ export class SettingsPage {
 
   readonly first = computed(() => this.slots()[0] ?? DEFAULT_DIGEST_HOUR);
   readonly second = computed(() => this.slots()[1] ?? null);
-  /** The select wants a string, and an absent second round is the empty one. */
-  readonly secondValue = computed(() => (this.second() === null ? '' : String(this.second())));
 
   /** "07:00" in both languages: en-GB keeps the 24h clock, as elsewhere. */
   label(hour: number): string {
