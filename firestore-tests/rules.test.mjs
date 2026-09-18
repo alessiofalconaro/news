@@ -120,6 +120,18 @@ await check('invitato legge le proprie storie', () =>
   assertSucceeds(getDoc(doc(me, 'stories', 'sMe'))));
 await check('il browser non scrive le storie', () =>
   assertFails(updateDoc(doc(me, 'stories', 'sMe'), { rank: 9 })));
+// Le query di lista sono valutate diversamente dalla lettura di un singolo
+// documento: la regola deve poter garantire che la query restituisca solo righe
+// permesse. Sono esattamente le due query che fa l'app, quindi vanno provate.
+await check('invitato elenca i propri digest, come fa la schermata Oggi', () =>
+  assertSucceeds(getDocs(query(collection(me, 'digests'), where('userId', '==', 'uidMe'), orderBy('digestDate', 'desc')))));
+await check('elenco dei digest senza filtro sul proprietario: rifiutato', () =>
+  assertFails(getDocs(query(collection(me, 'digests'), orderBy('digestDate', 'desc')))));
+await check('invitato elenca le storie di un proprio digest', () =>
+  assertSucceeds(getDocs(query(collection(me, 'stories'), where('digestId', '==', 'dMe'), orderBy('rank')))));
+await check('altro utente NON elenca le storie del mio digest', () =>
+  assertFails(getDocs(query(collection(friend, 'stories'), where('digestId', '==', 'dMe'), orderBy('rank')))));
+
 await check('seenArticles invisibile al browser', () =>
   assertFails(getDoc(doc(me, 'seenArticles', 'aMe'))));
 

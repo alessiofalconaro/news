@@ -186,11 +186,18 @@ const NAV = [
         left: 0;
         right: 0;
         z-index: 70;
-        padding: calc(8px + var(--safe-top)) 14px 8px;
+        padding: calc(8px + var(--safe-top) + var(--topbar-clear, 0px)) 14px 8px;
         background: color-mix(in srgb, var(--surface) 80%, transparent);
         backdrop-filter: blur(16px) saturate(1.4);
         -webkit-backdrop-filter: blur(16px) saturate(1.4);
         border-bottom: 1px solid var(--border);
+      }
+      /* Safari composites the children of a -webkit-backdrop-filter element
+         into the blurred layer itself unless they sit on their own plane, which
+         smears their top edge. Lifting them one step is the whole fix. */
+      .topbar > * {
+        position: relative;
+        z-index: 1;
       }
       .tb-title {
         font-family: var(--font-display);
@@ -225,7 +232,8 @@ const NAV = [
         flex: 1;
         min-width: 0;
         overflow-x: hidden;
-        padding: calc(66px + var(--safe-top)) var(--page-pad) calc(96px + var(--safe-bottom));
+        padding: calc(66px + var(--safe-top) + var(--topbar-clear, 0px)) var(--page-pad)
+          calc(96px + var(--safe-bottom));
       }
 
       .dock {
@@ -425,6 +433,7 @@ export class App {
         requestAnimationFrame(() => this.placeIndicator());
       });
     }
+
   }
 
   label(key: (typeof NAV)[number]['key']): string {

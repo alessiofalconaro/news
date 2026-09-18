@@ -33,6 +33,13 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
+  /* Breathing room above the header controls, on top of the safe area. iOS
+     leaves a few blurred pixels along the very top edge of the web view, and
+     without this the top of the IT/EN pill and of the title letters catches
+     them and comes out smeared. 14px is what it took to clear it on an iPhone
+     with a Dynamic Island; 16 already read as too low. */
+  --topbar-clear: 14px;
+
   --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-body:
     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,

@@ -54,3 +54,13 @@ ui-debug.log
 
 # Secrets: never commit these
 .env
+.env.local
+
+# A downloaded Firebase service account key is full database access. Ignored by
+# shape as well as by name, in case one gets saved into the repo by accident.
+*service-account*.json
+*serviceaccount*.json
+*-firebase-adminsdk-*.json
+
+# Output della prova a vuoto: cambia a ogni lancio, non va versionato.
+pipeline/ultimo-digest.txt

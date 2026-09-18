@@ -73,6 +73,12 @@ export interface Story {
   summaryIt: string;
   summaryEn: string;
   primaryUrl: string;
+  /**
+   * Picture of what the story is about, not a photo of the event: the article
+   * page is unreachable behind Google News redirects, so this comes from the
+   * subject the model named. Empty is normal and the card handles it.
+   */
+  imageUrl: string;
   sources: StorySource[];
   sourceCount: number;
   latestPublishedAt: number;

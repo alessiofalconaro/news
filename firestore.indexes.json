@@ -4,24 +4,46 @@
       "collectionGroup": "topics",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "sortOrder", "order": "ASCENDING" }
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sortOrder",
+          "order": "ASCENDING"
+        }
       ]
     },
     {
       "collectionGroup": "digests",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "digestDate", "order": "DESCENDING" }
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "digestDate",
+          "order": "DESCENDING"
+        }
       ]
     },
     {
       "collectionGroup": "stories",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "digestId", "order": "ASCENDING" },
-        { "fieldPath": "rank", "order": "ASCENDING" }
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "digestId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "rank",
+          "order": "ASCENDING"
+        }
       ]
     }
   ],
