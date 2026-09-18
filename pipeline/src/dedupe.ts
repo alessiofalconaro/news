@@ -23,7 +23,11 @@ function normalise(title: string): string {
 
 /** Words worth comparing: the short ones are grammar, not subject matter. */
 function contentWords(title: string): Set<string> {
-  return new Set(normalise(title).split(' ').filter((w) => w.length > 3));
+  return new Set(
+    normalise(title)
+      .split(' ')
+      .filter((w) => w.length > 3),
+  );
 }
 
 function overlap(a: Set<string>, b: Set<string>): number {
@@ -50,7 +54,8 @@ export function dropDuplicates(articles: Article[]): Article[] {
     if (seenUrls.has(article.url)) continue;
     const words = contentWords(article.title);
     const duplicate = kept.some(
-      (k) => normalise(k.article.title) === normalise(article.title) ||
+      (k) =>
+        normalise(k.article.title) === normalise(article.title) ||
         overlap(k.words, words) >= NEAR_DUPLICATE,
     );
     if (duplicate) continue;
@@ -63,7 +68,10 @@ export function dropDuplicates(articles: Article[]): Article[] {
 
 /** Stable id for the pair (topic, article), and the document id in Firestore. */
 export async function seenKey(topicId: string, url: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${topicId}:${url}`));
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(`${topicId}:${url}`),
+  );
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 

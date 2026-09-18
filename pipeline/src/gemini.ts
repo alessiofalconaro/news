@@ -76,7 +76,9 @@ export async function ask<T>(
       lastCallFinishedAt = Date.now();
       if (attempt === MAX_AI_ATTEMPTS || !worthRetrying(error)) break;
       const wait = PAUSE_BETWEEN_AI_CALLS_MS * attempt * 2;
-      warn(`${label}: tentativo ${attempt} fallito (${reason(error)}), riprovo tra ${wait / 1000}s`);
+      warn(
+        `${label}: tentativo ${attempt} fallito (${reason(error)}), riprovo tra ${wait / 1000}s`,
+      );
       await sleep(wait);
     }
   }

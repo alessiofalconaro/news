@@ -25,9 +25,7 @@ function hoursOf(data: Record<string, unknown>): number[] {
   const raw = Array.isArray(data['digestHours'])
     ? (data['digestHours'] as unknown[])
     : [data['digestHour']];
-  const hours = raw
-    .map(Number)
-    .filter((h) => Number.isInteger(h) && h >= 0 && h <= 23);
+  const hours = raw.map(Number).filter((h) => Number.isInteger(h) && h >= 0 && h <= 23);
   return hours.length ? [...new Set(hours)].sort((a, b) => a - b).slice(0, 2) : [10];
 }
 
@@ -102,7 +100,10 @@ export async function activeTopics(userId: string): Promise<Topic[]> {
         name: String(d['name'] ?? ''),
         interests: String(d['interests'] ?? ''),
         searchQuery: String(d['searchQuery'] ?? ''),
-        sourceLanguage: d['sourceLanguage'] === 'en' || d['sourceLanguage'] === 'both' ? d['sourceLanguage'] : 'it',
+        sourceLanguage:
+          d['sourceLanguage'] === 'en' || d['sourceLanguage'] === 'both'
+            ? d['sourceLanguage']
+            : 'it',
         extraFeeds: Array.isArray(d['extraFeeds']) ? (d['extraFeeds'] as string[]) : [],
         maxStories: Number(d['maxStories'] ?? 5),
         isActive: d['isActive'] !== false,
@@ -134,7 +135,9 @@ export async function dropRecentlySeen(topicId: string, articles: Article[]): Pr
   if (snapshot.empty) return articles;
   const cutoff = daysAgo(SEEN_ARTICLE_DAYS).getTime();
   const seen = new Set(
-    snapshot.docs.filter((doc) => Number(doc.data()['firstSeenAt'] ?? 0) >= cutoff).map((doc) => doc.id),
+    snapshot.docs
+      .filter((doc) => Number(doc.data()['firstSeenAt'] ?? 0) >= cutoff)
+      .map((doc) => doc.id),
   );
   if (!seen.size) return articles;
 
@@ -149,7 +152,10 @@ export async function dropRecentlySeen(topicId: string, articles: Article[]): Pr
  * told about anyway.
  */
 export async function saveAutoQuery(topicId: string, query: string, mark: string): Promise<void> {
-  await database().collection('topics').doc(topicId).set({ autoQuery: query, autoQueryFor: mark }, { merge: true });
+  await database()
+    .collection('topics')
+    .doc(topicId)
+    .set({ autoQuery: query, autoQueryFor: mark }, { merge: true });
 }
 
 /**
@@ -159,11 +165,11 @@ export async function saveAutoQuery(topicId: string, query: string, mark: string
  * app that was then closed should not produce a surprise digest at six in the
  * morning, ahead of the round the reader actually asked for.
  */
-export async function pendingRequest(userId: string): Promise<boolean> {
+export async function pendingRequest(userId: string): Promise<Date | null> {
   const doc = await database().collection('digestRequests').doc(userId).get();
-  if (!doc.exists) return false;
+  if (!doc.exists) return null;
   const at = Number(doc.data()?.['requestedAt'] ?? 0);
-  return Date.now() - at < 6 * 3_600_000;
+  return Date.now() - at < 6 * 3_600_000 ? new Date(at) : null;
 }
 
 /** Cleared whether or not it produced anything, so it cannot fire twice. */

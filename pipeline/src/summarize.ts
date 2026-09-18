@@ -58,7 +58,11 @@ const shape = z.object({
 
 function groupBlock(articles: Article[], index: number): string {
   const lines = articles
-    .map((a) => `  ${a.id} | ${a.source} | ${a.title}` + (a.snippet ? `\n       ${a.snippet.slice(0, 400)}` : ''))
+    .map(
+      (a) =>
+        `  ${a.id} | ${a.source} | ${a.title}` +
+        (a.snippet ? `\n       ${a.snippet.slice(0, 400)}` : ''),
+    )
     .join('\n');
   return `STORIA ${index}\n${lines}`;
 }
@@ -108,7 +112,8 @@ REGOLE, da rispettare tutte:
     .map((group, i) => {
       const text = written.get(i + 1);
       if (!text || !group.articles.length) return null;
-      const primary = group.articles.find((a) => a.id === text.primaryArticleId) ?? group.articles[0]!;
+      const primary =
+        group.articles.find((a) => a.id === text.primaryArticleId) ?? group.articles[0]!;
       return {
         rank: i + 1,
         headlineIt: text.headlineIt,

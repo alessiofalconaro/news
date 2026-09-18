@@ -43,10 +43,10 @@ export function renderTopic(result: TopicResult): void {
   out(rule('='));
 
   if (!stories.length) {
-    out('\nNessuna storia. Se si ripete, il problema e\' quasi sempre uno di questi:');
+    out("\nNessuna storia. Se si ripete, il problema e' quasi sempre uno di questi:");
     out('  - la query trova poco: prova a cambiare "Parole da cercare" nel topic;');
     out('  - "Cosa mi interessa" e\' troppo stretto e l\'AI scarta tutto;');
-    out('  - e\' passata poca notizia nelle ultime 24 ore.');
+    out("  - e' passata poca notizia nelle ultime 24 ore.");
     return;
   }
 

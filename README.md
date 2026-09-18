@@ -323,6 +323,17 @@ nella pagina — leggibile da chiunque apra il sito, visto che il codice e’
 pubblico anche se i dati non lo sono. Quindi l’app lascia una richiesta nel
 database, e la sveglia successiva, entro mezzora, la raccoglie e costruisce fuori orario.
 
+**Sostituisce o si aggiunge?** Dipende da quanto manca alla tornata programmata:
+
+- se premi **entro un’ora** da una tornata programmata, la richiesta prende il suo
+  posto e la anticipa. Chiedendo alle 09:15 con la tornata alle 10:00, ricevi
+  quella e basta, non due.
+- se premi **prima**, e’ una tornata in piu’ e il programma resta. Chiedendo alle
+  08:50, ricevi un digest verso le 09:00 e comunque quello delle 10:00.
+
+Conta il momento in cui premi, non quello in cui il sistema si sveglia. E l’app
+te lo dice **prima**: sotto il pulsante c’e’ scritto quale dei due casi e’.
+
 Il pulsante resta segnato *Richiesta in corso* finche’ la pipeline non la
 raccoglie, e si puo’ annullare. Una richiesta piu’ vecchia di sei ore viene
 ignorata, per non trovarsi un digest a sorpresa la mattina dopo.

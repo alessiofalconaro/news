@@ -55,27 +55,61 @@ export function dueSlot(
   return due.length ? Math.max(...due) : null;
 }
 
+/** Minutes since midnight in Rome, which is how a round is identified. */
+export function romeMinutes(at: Date = new Date()): number {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: ZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(at);
+  const [h, m] = parts.split(':').map(Number);
+  return (h ?? 0) * 60 + (m ?? 0);
+}
+
+/** How close to a scheduled round a request has to be to take its place. */
+const REPLACES_WITHIN_MINUTES = 60;
+
+export interface RequestedRound {
+  /** Identifies the round: minutes since midnight, so two never collide. */
+  slot: number;
+  /** The scheduled hour this round settles, or null when it is an extra. */
+  completesHour: number | null;
+}
+
 /**
- * Which round an on-demand request counts as.
+ * What an on-demand request turns into.
  *
- * Asking for the news shortly before a scheduled round should bring that round
- * forward, not add one: without this, pressing the button at five past nine
- * with a ten o'clock round would build at half past nine and then again at ten,
- * the second time with almost nothing new to say, which reads as a fault.
+ * Measured from the moment the button was pressed, not from when the pipeline
+ * happens to wake up: asking at ten to nine and asking at ten past nine are
+ * different intentions, and the wake-up time would flatten them into the same
+ * thing.
  *
- * A round further off than two hours is left alone: an afternoon request has
- * nothing to do with the evening one, and should not swallow it.
+ * Within an hour of a scheduled round, the request takes its place - you asked
+ * for essentially the round that was coming, so you get it early and not twice.
+ * Further out it is an extra round that leaves the schedule alone.
  */
-export function onDemandSlot(
+export function requestedRound(
   digestHours: number[],
   doneHours: number[],
-  at: Date = new Date(),
-): number {
-  const hour = romeHour(at);
-  const soon = digestHours
-    .filter((slot) => !doneHours.includes(slot))
-    .filter((slot) => slot >= hour && slot <= hour + 2);
-  return soon.length ? Math.min(...soon) : hour;
+  requestedAt: Date,
+  buildingAt: Date = new Date(),
+): RequestedRound {
+  const asked = romeMinutes(requestedAt);
+  const replaces = digestHours
+    .filter((hour) => !doneHours.includes(hour))
+    .filter((hour) => hour * 60 - asked >= 0 && hour * 60 - asked <= REPLACES_WITHIN_MINUTES);
+
+  if (replaces.length) {
+    const hour = Math.min(...replaces);
+    return { slot: hour * 60, completesHour: hour };
+  }
+  return { slot: romeMinutes(buildingAt), completesHour: null };
+}
+
+/** A scheduled round, identified the same way so the two can never clash. */
+export function scheduledRound(hour: number): RequestedRound {
+  return { slot: hour * 60, completesHour: hour };
 }
 
 export function hoursAgo(hours: number, from: Date = new Date()): Date {

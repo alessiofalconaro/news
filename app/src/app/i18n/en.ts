@@ -122,6 +122,11 @@ export const en: Dictionary = {
     refreshHint:
       'Asks for the news outside the schedule. Not instant: the digest is built within half an hour.',
     refreshPending: 'Request in progress…',
+    refreshReplaces: (hour: string) =>
+      `It will take the place of the ${hour} round: you will not get two.`,
+    refreshExtraWithNext: (hour: string) =>
+      `It will be an extra round: the ${hour} one still arrives.`,
+    refreshExtraOnly: 'It will be an extra round: today’s schedule has already passed.',
     refreshCancel: 'Cancel the request',
     refreshError: 'I could not send the request.',
     notifications: 'Notifications',

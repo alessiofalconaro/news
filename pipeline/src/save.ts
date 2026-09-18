@@ -26,8 +26,10 @@ export function digestId(userId: string, date: string): string {
 export interface SaveInput {
   userId: string;
   date: string;
-  /** The hour this round belongs to. */
+  /** Identifies the round: minutes since midnight in Rome. */
   slot: number;
+  /** The scheduled hour this settles, or null for an extra round. */
+  completesHour: number | null;
   results: TopicResult[];
   failedTopics: string[];
 }
@@ -42,7 +44,10 @@ export async function digestState(userId: string, date: string): Promise<DigestS
   const doc = await getFirestore().collection('digests').doc(digestId(userId, date)).get();
   if (!doc.exists) return { exists: false, doneHours: [] };
   const done = doc.data()?.['doneHours'];
-  return { exists: true, doneHours: Array.isArray(done) ? (done as number[]) : [] };
+  return {
+    exists: true,
+    doneHours: Array.isArray(done) ? (done as number[]) : [],
+  };
 }
 
 export async function saveDigest(input: SaveInput): Promise<{ id: string; stories: number }> {
@@ -68,7 +73,10 @@ export async function saveDigest(input: SaveInput): Promise<{ id: string; storie
   let rank = keptRanks.length ? Math.max(...keptRanks) : 0;
 
   const failedTopics = [...new Set([...previousFailed, ...input.failedTopics])];
-  const doneHours = [...new Set([...previousDone, input.slot])].sort((a, b) => a - b);
+  const doneHours =
+    input.completesHour === null
+      ? previousDone
+      : [...new Set([...previousDone, input.completesHour])].sort((a, b) => a - b);
 
   const produced = input.results.reduce((n, r) => n + r.stories.length, 0);
   const status: DigestStatus = failedTopics.length
@@ -100,7 +108,8 @@ export async function saveDigest(input: SaveInput): Promise<{ id: string; storie
     for (const story of result.stories) {
       rank += 1;
       count += 1;
-      const primary = story.articles.find((a) => a.id === story.primaryArticleId) ?? story.articles[0]!;
+      const primary =
+        story.articles.find((a) => a.id === story.primaryArticleId) ?? story.articles[0]!;
 
       batch.set(db.collection('stories').doc(`${id}_${input.slot}_${rank}`), {
         digestId: id,
@@ -135,6 +144,8 @@ export async function saveDigest(input: SaveInput): Promise<{ id: string; storie
   }
 
   await batch.commit();
-  detail(`salvato digest ${id}, tornata delle ${input.slot}:00: ${count} storie, stato ${status}`);
+  detail(
+    `salvato digest ${id}, tornata ${Math.floor(input.slot / 60)}:${String(input.slot % 60).padStart(2, '0')}: ${count} storie, stato ${status}`,
+  );
   return { id, stories: count };
 }

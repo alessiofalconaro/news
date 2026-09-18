@@ -35,7 +35,14 @@ import { digestState, saveDigest } from './save.ts';
 import { cleanup } from './cleanup.ts';
 import { renderSummary, renderTopic, startFile } from './render.ts';
 import { detail, fail, heading, reason, step, warn } from './log.ts';
-import { dueSlot, onDemandSlot, romeDate, romeHour } from './time.ts';
+import {
+  dueSlot,
+  requestedRound,
+  romeDate,
+  romeHour,
+  romeMinutes,
+  scheduledRound,
+} from './time.ts';
 import type { Profile, TopicResult } from './types.ts';
 
 interface Options {
@@ -65,9 +72,15 @@ async function runTopic(topic: TopicResult['topic']): Promise<TopicResult> {
   const fetched = await collectArticles(topic, searchQuery);
   const deduped = dropDuplicates(fetched);
   const unseen = await dropRecentlySeen(topic.id, deduped);
-  detail(`${fetched.length} raccolti, ${deduped.length} senza duplicati, ${unseen.length} mai usati`);
+  detail(
+    `${fetched.length} raccolti, ${deduped.length} senza duplicati, ${unseen.length} mai usati`,
+  );
 
-  const counts = { fetched: fetched.length, afterDedupe: deduped.length, afterSeen: unseen.length };
+  const counts = {
+    fetched: fetched.length,
+    afterDedupe: deduped.length,
+    afterSeen: unseen.length,
+  };
   if (!unseen.length) return { topic, stories: [], counts };
 
   const selected = await selectStories(topic, unseen);
@@ -93,22 +106,23 @@ async function runProfile(profile: Profile, options: Options, date: string): Pro
   // Two things override that. --force, for a manual run from GitHub, and a
   // request left in the app by whoever wants their news now - which is the
   // only route available to someone who has no access to the repository.
-  let slot = romeHour();
+  // An extra round, not a scheduled one, which is why it settles no hour: its
+  // identity is the minute it was built at, so it can never overwrite one of
+  // the day's scheduled rounds.
+  let round = { slot: romeMinutes(), completesHour: null as number | null };
   let onDemand = false;
 
   if (!options.dryRun && !options.force) {
-    onDemand = await pendingRequest(profile.id);
+    const requestedAt = await pendingRequest(profile.id);
     const state = await digestState(profile.id, date);
+    onDemand = requestedAt !== null;
 
-    if (onDemand) {
-      // Counts as the round that was about to happen, when one is close, so
-      // asking just before it brings it forward instead of doubling it.
-      slot = onDemandSlot(profile.digestHours, state.doneHours);
-      const brought = slot !== romeHour();
+    if (requestedAt) {
+      round = requestedRound(profile.digestHours, state.doneHours, requestedAt);
       step(
-        brought
-          ? `richiesto dall'app: anticipo la tornata delle ${slot}:00`
-          : "richiesto dall'app: costruisco adesso",
+        round.completesHour === null
+          ? "richiesto dall'app: una tornata in piu', il programma resta"
+          : `richiesto dall'app: anticipo la tornata delle ${round.completesHour}:00`,
       );
     } else {
       const due = dueSlot(profile.digestHours, state.doneHours);
@@ -116,7 +130,7 @@ async function runProfile(profile: Profile, options: Options, date: string): Pro
         step(`non e' la sua ora: a Roma sono le ${romeHour()}:00`);
         return 0;
       }
-      slot = due;
+      round = scheduledRound(due);
     }
   }
 
@@ -149,7 +163,14 @@ async function runProfile(profile: Profile, options: Options, date: string): Pro
 
   if (options.dryRun) return results.reduce((n, r) => n + r.stories.length, 0);
 
-  const saved = await saveDigest({ userId: profile.id, date, slot, results, failedTopics: failed });
+  const saved = await saveDigest({
+    userId: profile.id,
+    date,
+    slot: round.slot,
+    completesHour: round.completesHour,
+    results,
+    failedTopics: failed,
+  });
   return saved.stories;
 }
 

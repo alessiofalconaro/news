@@ -1,9 +1,10 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { I18n } from '../i18n/i18n.service';
 import { AuthService } from '../core/auth.service';
 import { Theme } from '../core/theme.service';
 import { ProfileService } from '../core/profile.service';
 import { RefreshService } from '../digest/refresh.service';
+import { nextRound, wouldReplace } from '../digest/schedule';
 import { DEFAULT_DIGEST_HOUR, MAX_DIGEST_HOUR, MIN_DIGEST_HOUR } from '../core/models';
 import { LangToggle } from '../lang-toggle';
 
@@ -62,6 +63,10 @@ import { LangToggle } from '../lang-toggle';
     <section class="card">
       <h2>{{ t().settings.refresh }}</h2>
       <p class="muted">{{ t().settings.refreshHint }}</p>
+
+      <!-- Said before the button is pressed, not discovered afterwards: whether
+           this replaces the round that was coming or adds one to it. -->
+      <p class="effect">{{ effect() }}</p>
 
       @if (refresh.pending()) {
         <p class="pending">⏳ {{ t().settings.refreshPending }}</p>
@@ -132,6 +137,12 @@ import { LangToggle } from '../lang-toggle';
         display: block;
         margin-bottom: 6px;
       }
+      .effect {
+        margin: 0 0 12px;
+        color: var(--text-soft);
+        font-size: 0.86rem;
+        line-height: 1.45;
+      }
       .pending {
         margin: 0 0 12px;
         color: var(--warn);
@@ -143,7 +154,7 @@ import { LangToggle } from '../lang-toggle';
     `,
   ],
 })
-export class SettingsPage {
+export class SettingsPage implements OnDestroy {
   readonly auth = inject(AuthService);
   readonly theme = inject(Theme);
   private readonly i18n = inject(I18n);
@@ -160,6 +171,28 @@ export class SettingsPage {
 
   readonly first = computed(() => this.slots()[0] ?? DEFAULT_DIGEST_HOUR);
   readonly second = computed(() => this.slots()[1] ?? null);
+
+  /**
+   * Re-read every half minute, so the sentence below the button stays true as
+   * the clock moves towards a scheduled round while the page sits open.
+   */
+  private readonly now = signal(new Date());
+  private readonly clock = setInterval(() => this.now.set(new Date()), 30_000);
+
+  readonly effect = computed(() => {
+    const rounds = this.slots();
+    const at = this.now();
+    const replaced = wouldReplace(rounds, at);
+    if (replaced !== null) return this.t().settings.refreshReplaces(this.label(replaced));
+    const next = nextRound(rounds, at);
+    return next === null
+      ? this.t().settings.refreshExtraOnly
+      : this.t().settings.refreshExtraWithNext(this.label(next));
+  });
+
+  ngOnDestroy(): void {
+    clearInterval(this.clock);
+  }
 
   /** "07:00" in both languages: en-GB keeps the 24h clock, as elsewhere. */
   label(hour: number): string {

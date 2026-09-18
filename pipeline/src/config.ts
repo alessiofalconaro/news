@@ -43,7 +43,7 @@ export function loadConfig(): Config {
     serviceAccount = JSON.parse(raw) as Record<string, unknown>;
   } catch {
     throw new Error(
-      'FIREBASE_SERVICE_ACCOUNT non e\' JSON valido. Dev\'essere tutto il file ' +
+      "FIREBASE_SERVICE_ACCOUNT non e' JSON valido. Dev'essere tutto il file " +
         'scaricato, su una riga sola, tra apici singoli dentro il .env.',
     );
   }
