@@ -2,6 +2,7 @@ import { Component, computed, inject, input } from '@angular/core';
 import { I18n } from '../i18n/i18n.service';
 import { TOPIC_COLORS, TopicsService } from '../topics/topics.service';
 import { StoryCard } from './story-card';
+import { ViewModeService } from './view-mode.service';
 import type { Story } from '../core/models';
 
 interface TopicGroup {
@@ -57,7 +58,7 @@ function colorFromName(name: string): string {
           <span class="count">{{ t().today.storyCount(group.stories.length) }}</span>
         </header>
 
-        <div class="stories">
+        <div class="stories" [class.swipe]="mode() === 'cards'">
           @for (story of group.stories; track story.id) {
             <app-story-card [story]="story" [accent]="group.color" />
           }
@@ -123,11 +124,35 @@ function colorFromName(name: string): string {
         flex-direction: column;
         gap: 10px;
       }
+
+      /* One story at a time, swiped sideways. Native scroll snapping rather
+         than a hand-written carousel: it keeps the iPhone's own momentum and
+         rubber-banding, which any reimplementation gets subtly wrong. */
+      .stories.swipe {
+        flex-direction: row;
+        gap: 12px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        /* Bleeds through the page padding so a card can sit edge to edge. */
+        padding: 2px var(--page-pad) 4px;
+        margin-inline: calc(-1 * var(--page-pad));
+        overscroll-behavior-x: contain;
+      }
+      .stories.swipe::-webkit-scrollbar {
+        display: none;
+      }
+      .stories.swipe app-story-card {
+        flex: 0 0 100%;
+        scroll-snap-align: center;
+      }
     `,
   ],
 })
 export class TopicSections {
   private readonly topics = inject(TopicsService);
+  private readonly viewMode = inject(ViewModeService);
+  readonly mode = this.viewMode.mode;
   private readonly i18n = inject(I18n);
   readonly t = this.i18n.t;
 
@@ -154,6 +179,13 @@ export class TopicSections {
         byKey.set(key, group);
       }
       group.stories.push(story);
+    }
+
+    // Newest first inside a topic. Stories arrive ordered by rank, which grows
+    // round after round, so across a day of several rounds the times ended up
+    // interleaved: rank 1 at 17:54 followed by rank 43 at 21:08.
+    for (const group of byKey.values()) {
+      group.stories.sort((a, b) => b.latestPublishedAt - a.latestPublishedAt);
     }
 
     return [...byKey.values()];

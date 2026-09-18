@@ -31,7 +31,7 @@ import { dropDuplicates } from './dedupe.ts';
 import { selectStories } from './select.ts';
 import { writeStories } from './summarize.ts';
 import { attachImages } from './image.ts';
-import { digestState, saveDigest } from './save.ts';
+import { digestState, saveDigest, trimToLimits } from './save.ts';
 import { cleanup } from './cleanup.ts';
 import { initPush, notify } from './push.ts';
 import { renderSummary, renderTopic, startFile } from './render.ts';
@@ -172,14 +172,27 @@ async function runProfile(profile: Profile, options: Options, date: string): Pro
     results,
     failedTopics: failed,
   });
+  // Trimmed before the notification, so its count matches what is actually
+  // there to read.
+  await trimToLimits(
+    profile.id,
+    date,
+    new Map(topics.map((t) => [t.id, t.maxStories])),
+  );
+
   // Sent after the save, never before: a notification promising news that is
   // not there yet is worse than one that arrives a second late.
-  if (saved.stories) {
+  // The lead story is the first one of the first topic that produced any:
+  // rank 1 of this round, which is what the notification quotes.
+  const lead = results.find((r) => r.stories.length)?.stories[0];
+
+  if (saved.stories && lead) {
     await notify({
       userId: profile.id,
       language: profile.language,
       stories: saved.stories,
       topics: results.filter((r) => r.stories.length).length,
+      lead: profile.language === 'en' ? lead.headlineEn : lead.headlineIt,
     }).catch((error: unknown) => warn(`notifiche: ${reason(error)}`));
   }
 

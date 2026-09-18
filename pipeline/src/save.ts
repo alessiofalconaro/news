@@ -149,3 +149,55 @@ export async function saveDigest(input: SaveInput): Promise<{ id: string; storie
   );
   return { id, stories: count };
 }
+
+/**
+ * Keeps a day's digest to the size its owner asked for.
+ *
+ * A topic set to five stories means five in the morning, not five more every
+ * time a round runs: after six rounds in a day one topic had twenty-six, which
+ * is not a digest any more. So after each round the topic is trimmed back to
+ * its own limit.
+ *
+ * What survives is the newest round first, and within a round the order the AI
+ * ranked them in. The reasoning is that a later round has already excluded
+ * everything the earlier ones used - `seenArticles` sees to that - so a newer
+ * story is never a repeat of an older one, and when a story develops during the
+ * day the newer telling is the one worth keeping.
+ */
+export async function trimToLimits(
+  userId: string,
+  date: string,
+  limits: Map<string, number>,
+): Promise<void> {
+  const db = getFirestore();
+  const id = digestId(userId, date);
+  const all = await db.collection('stories').where('digestId', '==', id).get();
+
+  const byTopic = new Map<string, typeof all.docs>();
+  for (const doc of all.docs) {
+    const topicId = String(doc.data()['topicId'] ?? '');
+    byTopic.set(topicId, [...(byTopic.get(topicId) ?? []), doc]);
+  }
+
+  const batch = db.batch();
+  let removed = 0;
+
+  for (const [topicId, docs] of byTopic) {
+    const limit = limits.get(topicId);
+    if (!limit || docs.length <= limit) continue;
+
+    const ordered = [...docs].sort((a, b) => {
+      const slotDiff = Number(b.data()['slot'] ?? 0) - Number(a.data()['slot'] ?? 0);
+      return slotDiff !== 0 ? slotDiff : Number(a.data()['rank'] ?? 0) - Number(b.data()['rank'] ?? 0);
+    });
+
+    for (const doc of ordered.slice(limit)) {
+      batch.delete(doc.ref);
+      removed += 1;
+    }
+  }
+
+  if (!removed) return;
+  await batch.commit();
+  detail(`tolte ${removed} storie oltre il limite dei topic`);
+}

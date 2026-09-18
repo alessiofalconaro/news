@@ -5,6 +5,7 @@ import { Theme } from '../core/theme.service';
 import { ProfileService } from '../core/profile.service';
 import { RefreshService } from '../digest/refresh.service';
 import { PushService } from '../core/push.service';
+import { ViewModeService } from '../digest/view-mode.service';
 import { nextRound, wouldReplace } from '../digest/schedule';
 import { DEFAULT_DIGEST_HOUR, MAX_DIGEST_HOUR, MIN_DIGEST_HOUR } from '../core/models';
 import { LangToggle } from '../lang-toggle';
@@ -29,6 +30,30 @@ import { LangToggle } from '../lang-toggle';
       <button class="btn" (click)="theme.toggle()">
         {{ theme.light() ? '☀️ ' + t().settings.themeLight : '🌙 ' + t().settings.themeDark }}
       </button>
+    </section>
+
+    <section class="card">
+      <h2>{{ t().settings.layout }}</h2>
+      <p class="muted">{{ t().settings.layoutHint }}</p>
+
+      <div class="choices">
+        <button
+          class="choice"
+          [class.on]="viewMode.mode() === 'list'"
+          (click)="viewMode.set('list')"
+        >
+          <strong>{{ t().settings.layoutList }}</strong>
+          <small>{{ t().settings.layoutListHint }}</small>
+        </button>
+        <button
+          class="choice"
+          [class.on]="viewMode.mode() === 'cards'"
+          (click)="viewMode.set('cards')"
+        >
+          <strong>{{ t().settings.layoutCards }}</strong>
+          <small>{{ t().settings.layoutCardsHint }}</small>
+        </button>
+      </div>
     </section>
 
     <section class="card">
@@ -157,6 +182,35 @@ import { LangToggle } from '../lang-toggle';
       .row .muted {
         margin: 0;
       }
+      .choices {
+        display: flex;
+        gap: 10px;
+      }
+      .choice {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--surface-2);
+        color: var(--text);
+        text-align: left;
+      }
+      .choice.on {
+        border-color: var(--brand);
+        background: color-mix(in srgb, var(--brand) 12%, var(--surface-2));
+      }
+      .choice strong {
+        font-size: 0.9rem;
+      }
+      .choice small {
+        color: var(--text-soft);
+        font-size: 0.76rem;
+        line-height: 1.35;
+      }
       .slots {
         display: flex;
         gap: 12px;
@@ -205,6 +259,7 @@ export class SettingsPage implements OnDestroy {
   private readonly profiles = inject(ProfileService);
   readonly refresh = inject(RefreshService);
   readonly push = inject(PushService);
+  readonly viewMode = inject(ViewModeService);
   readonly t = this.i18n.t;
 
   readonly hours = Array.from(

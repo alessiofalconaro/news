@@ -21,16 +21,35 @@ export function initPush(publicKey: string, privateKey: string, subject: string)
   configured = true;
 }
 
-function text(language: 'it' | 'en', stories: number, topics: number): { title: string; body: string } {
+/**
+ * What the notification says.
+ *
+ * The headline of the lead story, not a status report: an alert that announces
+ * a process has finished is the shape of a system talking about itself. What a
+ * reader wants at a glance is the news, with the rest of the digest as the
+ * quiet second line.
+ */
+function text(
+  language: 'it' | 'en',
+  lead: string,
+  stories: number,
+  topics: number,
+): { title: string; body: string } {
+  const others = stories - 1;
+  const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
+
   if (language === 'en') {
+    const from = `${topics} ${plural(topics, 'topic', 'topics')}`;
     return {
-      title: 'Your digest is ready',
-      body: `${stories} ${stories === 1 ? 'story' : 'stories'} from ${topics} ${topics === 1 ? 'topic' : 'topics'}`,
+      title: lead,
+      body: others ? `and ${others} more ${plural(others, 'story', 'stories')} from ${from}` : `from ${from}`,
     };
   }
+
+  const da = `${topics} topic`;
   return {
-    title: 'Il tuo digest è pronto',
-    body: `${stories} ${stories === 1 ? 'notizia' : 'notizie'} da ${topics} ${topics === 1 ? 'topic' : 'topic'}`,
+    title: lead,
+    body: others ? `e altre ${others} ${plural(others, 'storia', 'storie')} da ${da}` : `da ${da}`,
   };
 }
 
@@ -39,6 +58,8 @@ export interface NotifyInput {
   language: 'it' | 'en';
   stories: number;
   topics: number;
+  /** Headline of the lead story, already in the right language. */
+  lead: string;
 }
 
 export async function notify(input: NotifyInput): Promise<void> {
@@ -58,7 +79,7 @@ export async function notify(input: NotifyInput): Promise<void> {
     return;
   }
 
-  const { title, body } = text(input.language, input.stories, input.topics);
+  const { title, body } = text(input.language, input.lead, input.stories, input.topics);
   // The shape Angular's service worker expects; `onActionClick` is what makes
   // the tap open today's digest rather than just dismissing the notification.
   const payload = JSON.stringify({
