@@ -82,8 +82,14 @@ function romeToday(): string {
       }
       .layout {
         flex: none;
+        /* Centred by the box, not by the text baseline: these glyphs sit low
+           in their em box and line-height alone left them below centre. */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         width: 40px;
         height: 40px;
+        padding: 0;
         border-radius: var(--radius-sm);
         border: 1px solid var(--border);
         background: var(--surface);

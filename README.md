@@ -18,7 +18,7 @@ firestore.indexes.json
 firebase.json         hosting e intestazioni di sicurezza
 ```
 
-## Stato: Fase 5
+## Stato: completo
 
 **Fase 1** — struttura, traduzioni italiano e inglese con cambio istantaneo,
 login con Google, lista degli invitati, regole del database, gestione dei
@@ -36,9 +36,139 @@ che ciascuno sceglie.
 
 **Fase 5** — notifiche push quando il digest è pronto.
 
-Manca la **Fase 6**: la rifinitura finale.
+**Fase 6** — controllo visivo, e questo README.
 
 ---
+
+# Come si usa, tutti i giorni
+
+Questa parte serve dopo, quando tutto è configurato. Per mettere in piedi il
+progetto da zero, vai alla sezione successiva.
+
+## Come funziona, in breve
+
+Ogni topic è un argomento che vuoi seguire: gli dai un nome e scrivi, con parole
+tue, cosa ti interessa di quell'argomento.
+
+All'ora che hai scelto, su un computer di GitHub parte uno script. Per ogni
+topic scarica quello che Google News ha raccolto nelle ultime 24 ore, butta via
+i doppioni e quello che hai già letto nell'ultima settimana, e passa il resto a
+un'intelligenza artificiale con due domande: *quali di queste meritano* e *come
+si riassumono*. Quello che resta finisce nel database, e l'app lo mostra.
+
+Tre cose spiegano quasi tutto quello che vedrai:
+
+- **Una "notizia" non è un articolo, è un fatto.** Se dieci testate raccontano
+  la stessa cosa, diventa una sola voce con scritto "10 fonti". Toccando quel
+  numero le vedi tutte.
+- **L'ordine non è casuale.** Conta soprattutto quante testate diverse ne
+  parlano: è l'unico segnale oggettivo di importanza che esista senza chiedere
+  un parere a qualcuno.
+- **L'immagine è del soggetto, non dell'evento.** Alla foto dell'articolo non si
+  arriva, quindi si cerca su Wikipedia il soggetto della notizia: per i Cavaliers
+  il logo, per lo Stretto di Hormuz la foto dello stretto.
+
+## Aggiungere o togliere un invitato
+
+Solo gli indirizzi in elenco possono entrare. Si gestiscono dalla console, non
+dall'app.
+
+1. <https://console.firebase.google.com/project/newsdigest-827ac/firestore>
+2. Collezione **`allowedEmails`**.
+3. **Aggiungere:** *Add document* → come **ID** l'indirizzo email **tutto in
+   minuscolo**. Campi: nessuno. Se insiste, metti `note` di tipo *string* vuoto.
+4. **Togliere:** apri il documento e cancellalo.
+
+Chi togli non entra più al prossimo accesso. Quello che aveva già scritto resta
+nel database.
+
+L'errore più comune è una maiuscola o uno spazio nell'indirizzo: l'ID deve
+essere identico all'email con cui la persona accede a Google.
+
+## Farsi mandare il digest adesso
+
+Due strade, e cambia solo la velocità.
+
+**Dall'app**, e funziona per chiunque: **Impostazioni** → **Aggiorna adesso**.
+La richiesta viene raccolta alla prossima sveglia, quindi entro mezz'ora. Sotto
+il pulsante c'è scritto se sostituirà la tornata programmata o se se ne
+aggiungerà una.
+
+**Da GitHub**, e parte in pochi secondi, ma serve accesso al repository:
+<https://github.com/alessiofalconaro/news/actions/workflows/daily-digest.yml>
+→ **Run workflow** → spunta *Lancia subito* → **Run workflow**. In un paio di
+minuti il digest c'è e la notifica è arrivata.
+
+Se avevi già premuto *Aggiorna adesso* nell'app, il lancio manuale consuma anche
+quella richiesta: non otterrai un secondo digest mezz'ora dopo.
+
+## Se qualcosa smette di funzionare
+
+La domanda da farsi è sempre la stessa: **il digest non è stato costruito, o è
+stato costruito e l'app non lo mostra?** I due casi si guardano in posti diversi.
+
+### Se manca il digest: i log di GitHub
+
+<https://github.com/alessiofalconaro/news/actions>
+
+Ogni riga è un'esecuzione. Il pallino verde significa riuscita, la X fallita.
+Apri quella che ti interessa e clicca **Costruisci il digest**: dentro c'è lo
+stesso testo che vedresti lanciandolo da casa.
+
+Righe che vale la pena riconoscere:
+
+| Nel log | Significa |
+|---|---|
+| `non e' la sua ora` | tutto bene: non era il tuo orario, e non ha fatto niente |
+| `il digest di oggi esiste gia'` | già costruito, non lo rifà |
+| `salvato digest ... stato ok` | riuscito |
+| `stato partial` | qualche topic è fallito, gli altri ci sono |
+| `topic "X" fallito` | solo quel topic; guarda la riga dopo per il motivo |
+| `429` oppure `quota` | limite giornaliero di Gemini esaurito, riprova domani |
+| `notifiche non configurate` | mancano i segreti VAPID |
+| `nessun dispositivo iscritto` | notifiche da attivare nell'app |
+
+Le esecuzioni a vuoto sono la norma: il workflow si sveglia ogni mezz'ora e
+quasi sempre non tocca a nessuno.
+
+### Se il digest c'è ma l'app non lo mostra
+
+Quasi sempre è l'app rimasta indietro: **chiudila del tutto e riaprila**, due
+volte se serve. Il perché è nella nota sul service worker in fondo.
+
+Se invece compare un riquadro **"Non riesco a caricare il digest"** con un
+codice sotto, quello è un errore vero: mandami il codice.
+
+### Il database, per guardare coi propri occhi
+
+<https://console.firebase.google.com/project/newsdigest-827ac/firestore>
+
+- `digests` — uno per persona per giorno. `status` dice com'è andata,
+  `doneHours` quali tornate sono state fatte.
+- `stories` — le notizie.
+- `topics` — i tuoi argomenti. `autoQuery` è la ricerca che il sistema si è
+  ricavato da solo.
+- `allowedEmails` — chi può entrare.
+- `seenArticles` — memoria degli articoli già usati. Si svuota da sola a 14
+  giorni.
+
+Si può guardare tutto senza rischi. A cancellare, invece, si fa danno: le
+notizie di `stories` non si ricostruiscono.
+
+## Quando si consuma qualcosa
+
+Tutto sta nei piani gratuiti, ma i limiti esistono:
+
+- **GitHub Actions**: ~1080 minuti al mese sui 2000 inclusi. Senza carta
+  registrata, a minuti esauriti i job si **bloccano, non si pagano**.
+- **Gemini**: qualche decina di chiamate al giorno, due per topic più una la
+  prima volta che si ricava la ricerca.
+- **Firebase**: letture e scritture minime, molto sotto la soglia.
+
+Conviene attivare le email di avviso di GitHub al 90% del consumo.
+
+---
+
 
 # Cosa devi configurare tu, una volta sola
 

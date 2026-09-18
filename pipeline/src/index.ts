@@ -137,7 +137,12 @@ async function runProfile(profile: Profile, options: Options, date: string): Pro
 
   // Cleared up front, and not at the end: a run that fails partway must not
   // leave the request standing, or every later wake-up would rebuild forever.
-  if (onDemand) await clearRequest(profile.id);
+  //
+  // A forced run clears it too, even though it never looked at it: pressing the
+  // button in the app and then starting the job by hand is one intention, and
+  // leaving the request behind would have produced a second digest half an hour
+  // later out of nowhere.
+  if (onDemand || (options.force && !options.dryRun)) await clearRequest(profile.id);
 
   const topics = await activeTopics(profile.id);
   if (!topics.length) {
