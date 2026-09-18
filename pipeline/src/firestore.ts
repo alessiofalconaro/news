@@ -16,10 +16,19 @@ import { seenKey } from './dedupe.ts';
 import { daysAgo } from './time.ts';
 import type { Article, Profile, Topic } from './types.ts';
 
-/** Default and clamp: a profile written before this setting existed has none. */
-function hourOf(value: unknown): number {
-  const hour = Number(value);
-  return Number.isInteger(hour) && hour >= 0 && hour <= 23 ? hour : 10;
+/**
+ * One or two hours, sane and sorted. A profile written before this setting
+ * existed has none, and one written before two were allowed carries a single
+ * `digestHour`: both still have to work.
+ */
+function hoursOf(data: Record<string, unknown>): number[] {
+  const raw = Array.isArray(data['digestHours'])
+    ? (data['digestHours'] as unknown[])
+    : [data['digestHour']];
+  const hours = raw
+    .map(Number)
+    .filter((h) => Number.isInteger(h) && h >= 0 && h <= 23);
+  return hours.length ? [...new Set(hours)].sort((a, b) => a - b).slice(0, 2) : [10];
 }
 
 let db: Firestore | null = null;
@@ -51,7 +60,7 @@ export async function findProfileByEmail(email: string): Promise<Profile | null>
     email: String(data['email'] ?? ''),
     displayName: String(data['displayName'] ?? ''),
     language: data['language'] === 'en' ? 'en' : 'it',
-    digestHour: hourOf(data['digestHour']),
+    digestHours: hoursOf(data),
   };
 }
 
@@ -65,7 +74,7 @@ export async function allProfiles(): Promise<Profile[]> {
       email: String(data['email'] ?? ''),
       displayName: String(data['displayName'] ?? ''),
       language: data['language'] === 'en' ? 'en' : 'it',
-      digestHour: hourOf(data['digestHour']),
+      digestHours: hoursOf(data),
     } satisfies Profile;
   });
 }

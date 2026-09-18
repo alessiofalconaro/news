@@ -28,16 +28,30 @@ import { LangToggle } from '../lang-toggle';
       </button>
     </section>
 
-    <section class="card row">
-      <div class="label">
-        <h2>{{ t().settings.digestTime }}</h2>
-        <p class="muted">{{ t().settings.digestTimeHint }}</p>
+    <section class="card">
+      <h2>{{ t().settings.digestTime }}</h2>
+      <p class="muted">{{ t().settings.digestTimeHint }}</p>
+
+      <div class="slots">
+        <label class="slot">
+          <span>{{ t().settings.digestFirst }}</span>
+          <select [value]="first()" (change)="pickFirst($event)">
+            @for (h of hours; track h) {
+              <option [value]="h">{{ label(h) }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="slot">
+          <span>{{ t().settings.digestSecond }}</span>
+          <select [value]="secondValue()" (change)="pickSecond($event)">
+            <option value="">{{ t().settings.digestNone }}</option>
+            @for (h of hours; track h) {
+              <option [value]="h">{{ label(h) }}</option>
+            }
+          </select>
+        </label>
       </div>
-      <select [value]="hour()" (change)="pickHour($event)" [attr.aria-label]="t().settings.digestTime">
-        @for (h of hours; track h) {
-          <option [value]="h">{{ label(h) }}</option>
-        }
-      </select>
     </section>
 
     <section class="card">
@@ -82,9 +96,18 @@ import { LangToggle } from '../lang-toggle';
       .row .muted {
         margin: 0;
       }
-      .row select {
-        width: auto;
-        flex: none;
+      .slots {
+        display: flex;
+        gap: 12px;
+      }
+      .slot {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+      }
+      .slot span {
+        display: block;
+        margin-bottom: 6px;
       }
     `,
   ],
@@ -101,15 +124,27 @@ export class SettingsPage {
     (_, i) => MIN_DIGEST_HOUR + i,
   );
 
-  readonly hour = computed(() => this.profiles.profile()?.digestHour ?? DEFAULT_DIGEST_HOUR);
+  private readonly slots = computed(() => this.profiles.profile()?.digestHours ?? [DEFAULT_DIGEST_HOUR]);
+
+  readonly first = computed(() => this.slots()[0] ?? DEFAULT_DIGEST_HOUR);
+  readonly second = computed(() => this.slots()[1] ?? null);
+  /** The select wants a string, and an absent second round is the empty one. */
+  readonly secondValue = computed(() => (this.second() === null ? '' : String(this.second())));
 
   /** "07:00" in both languages: en-GB keeps the 24h clock, as elsewhere. */
   label(hour: number): string {
     return `${String(hour).padStart(2, '0')}:00`;
   }
 
-  pickHour(event: Event): void {
+  pickFirst(event: Event): void {
     const hour = Number((event.target as HTMLSelectElement).value);
-    void this.profiles.setDigestHour(hour);
+    const second = this.second();
+    void this.profiles.setDigestHours(second === null ? [hour] : [hour, second]);
+  }
+
+  pickSecond(event: Event): void {
+    const raw = (event.target as HTMLSelectElement).value;
+    // Empty means "only one round a day", which is the common case.
+    void this.profiles.setDigestHours(raw === '' ? [this.first()] : [this.first(), Number(raw)]);
   }
 }

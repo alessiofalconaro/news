@@ -53,11 +53,14 @@ export class ProfileService {
     });
   }
 
-  /** The hour this account wants its digest, in Italian local time. */
-  async setDigestHour(hour: number): Promise<void> {
+  /** The hours this account wants a digest, in Italian local time. */
+  async setDigestHours(hours: number[]): Promise<void> {
     const profile = this.profile();
     if (!profile) return;
-    await updateDoc(doc(db, 'profiles', profile.id), { digestHour: hour });
+    // Sorted and deduplicated: the pipeline walks them in order, and two equal
+    // slots would mean one silently never running.
+    const clean = [...new Set(hours)].sort((a, b) => a - b);
+    await updateDoc(doc(db, 'profiles', profile.id), { digestHours: clean });
   }
 
   private listen(uid: string, email: string, displayName: string): void {
@@ -89,7 +92,7 @@ export class ProfileService {
       email: email.toLowerCase(),
       displayName,
       language,
-      digestHour: DEFAULT_DIGEST_HOUR,
+      digestHours: [DEFAULT_DIGEST_HOUR],
       createdAt: Date.now(),
     }).catch(() => {
       // Rules rejected it, which means the account is not on the allow list.

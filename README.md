@@ -288,13 +288,17 @@ Se lo lanci **senza** la spunta e non sono le 10-12 in Italia, scrive
 ## A che ora arriva
 
 L'ora si sceglie **dall'app**, in Impostazioni → *Ora del digest*, fra le 6 e
-le 22. Vale solo per chi la imposta: tu puoi averlo alle 7 e il tuo amico alle
-19.
+le 22. Puoi chiederne **una o due al giorno**: per esempio la mattina e la
+sera. Vale solo per chi la imposta, quindi tu e il tuo amico potete avere orari
+diversi.
 
-Come funziona: il workflow si sveglia ogni ora e costruisce solo per chi ha
-appuntamento in quel momento. Se un'esecuzione fallisce o parte in ritardo, la
-sveglia dell'ora dopo se ne accorge e rimedia, perche' la finestra di ciascuno
-dura due ore.
+La seconda tornata **si aggiunge** alla prima, non la sostituisce: Oggi resta
+una pagina sola che si riempie durante la giornata. E non ripete le stesse
+notizie, perche' gli articoli gia' usati restano esclusi per una settimana.
+
+Come funziona: il workflow si sveglia ogni ora e costruisce solo per chi ha una
+tornata dovuta in quel momento. Ogni tornata resta dovuta per due ore, ed e' la
+rete di sicurezza: se un'esecuzione fallisce, la sveglia dell'ora dopo rimedia.
 
 Di notte non si sveglia. Le ore coperte sono le 04:00-21:00 UTC, che con
 l'Italia a UTC+1 d'inverno e UTC+2 d'estate bastano a servire qualunque ora fra
@@ -306,6 +310,27 @@ inclusi** nel piano gratuito per i repository privati. Senza una carta
 registrata, a minuti esauriti i job vengono **bloccati, non addebitati**: non
 puo' partire nessun pagamento. Conviene attivare le email di avviso al 90% e al
 100% nelle impostazioni di fatturazione di GitHub.
+
+## Le notizie adesso, senza aspettare
+
+Serve dopo aver modificato un topic, per vedere subito se la modifica ha reso.
+
+Da GitHub, anche dal telefono: **Actions** → *Digest quotidiano* → **Run
+workflow**, con la spunta su *Lancia subito*. Ignora sia l'orario sia le
+tornate gia' fatte, e costruisce.
+
+Non c'e' un pulsante dentro l'app, e non e' una dimenticanza: per far partire
+il workflow servirebbe una chiave di GitHub dentro la pagina, e tutto quello
+che sta nella pagina e' leggibile da chiunque apra il sito. L'alternativa,
+una funzione sul server, richiede il piano a pagamento di Firebase.
+
+## Se modifichi un topic
+
+Le parole da cercare vengono ricalcolate da sole al primo digest successivo:
+la pipeline tiene un'impronta di nome, interessi e lingua del topic, e quando
+non corrisponde piu' rifa' la query invece di riusare quella in cache.
+
+Le notizie gia' salvate non cambiano: la modifica vale da li' in avanti.
 
 
 # Comandi utili

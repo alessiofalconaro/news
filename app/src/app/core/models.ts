@@ -26,6 +26,8 @@ export const DEFAULT_STORIES = 5;
 export const MIN_DIGEST_HOUR = 6;
 export const MAX_DIGEST_HOUR = 22;
 export const DEFAULT_DIGEST_HOUR = 10;
+/** Two is plenty: more would mostly produce empty rounds. */
+export const MAX_DIGEST_SLOTS = 2;
 
 export interface Profile {
   id: string;
@@ -33,13 +35,14 @@ export interface Profile {
   displayName: string;
   language: Lang;
   /**
-   * Hour in Europe/Rome at which this account wants its digest, 0-23.
+   * Hours in Europe/Rome at which this account wants a digest, one or two.
    *
-   * The schedule is per account rather than per app: the workflow wakes up
-   * every hour and only builds for whoever has an appointment then, so two
-   * people sharing the app can read their news at different times.
+   * Two because a morning round and an evening round are different readings,
+   * not the same one repeated: the evening one only carries what came out
+   * since. The schedule is per account, so two people sharing the app read
+   * their news at their own times.
    */
-  digestHour: number;
+  digestHours: number[];
   createdAt: number;
 }
 
@@ -68,6 +71,8 @@ export interface Digest {
   status: DigestStatus;
   /** Names of the topics that failed, shown by the partial-digest banner. */
   failedTopics: string[];
+  /** Which of the account's slots have already been built today. */
+  doneHours: number[];
   createdAt: number;
 }
 
@@ -84,6 +89,8 @@ export interface Story {
   topicId: string | null;
   topicName: string;
   rank: number;
+  /** The slot that produced this story, so a rerun replaces only its own. */
+  slot: number;
   headlineIt: string;
   headlineEn: string;
   summaryIt: string;

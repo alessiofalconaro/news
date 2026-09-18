@@ -31,17 +31,28 @@ export function romeHour(at: Date = new Date()): number {
 }
 
 /**
- * Whether it is this account's turn.
+ * Which of an account's slots is due now, or null if none is.
  *
  * The workflow wakes up every hour and asks this for each account, so two
- * people can read their news at different times. The window runs from the
- * chosen hour to two hours later, which is what makes a failed or delayed run
- * recoverable: the next hourly wake-up picks it up instead of the digest
- * silently not existing that day.
+ * people can read their news at their own times, and one person can ask for
+ * both a morning and an evening round.
+ *
+ * A slot stays due for two hours after its hour, and that is what makes a
+ * failed or delayed run recoverable: the next wake-up finds it still unbuilt
+ * and tries again, instead of the digest silently not existing that day. Slots
+ * already built today are passed in and skipped; the latest due one wins, so a
+ * long catch-up never rebuilds the morning round at dinner time.
  */
-export function isDigestTime(digestHour: number, at: Date = new Date()): boolean {
+export function dueSlot(
+  digestHours: number[],
+  doneHours: number[],
+  at: Date = new Date(),
+): number | null {
   const hour = romeHour(at);
-  return hour >= digestHour && hour <= digestHour + 2;
+  const due = digestHours
+    .filter((slot) => !doneHours.includes(slot))
+    .filter((slot) => hour >= slot && hour <= slot + 2);
+  return due.length ? Math.max(...due) : null;
 }
 
 export function hoursAgo(hours: number, from: Date = new Date()): Date {

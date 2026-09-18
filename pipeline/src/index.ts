@@ -4,12 +4,14 @@
  *   npm run digest -- --dry-run --user mario@example.com   prints, saves nothing
  *   npm run digest -- --user mario@example.com             one account, for real
  *   npm run digest                                         every account
- *   npm run digest -- --force                              ignores the time window
+ *   npm run digest -- --force                              builds now, regardless
  *
- * The daily job runs the last two. Each account carries the hour it wants its
- * digest, so the workflow wakes up every hour and this only builds for whoever
- * has an appointment then - which is also what makes a failed run recoverable,
- * since the next wake-up finds no digest and tries again.
+ * The daily job runs the plain form. Each account carries the hours it wants a
+ * digest at, one or two, so the workflow wakes up every hour and this builds
+ * only for whoever has a round due then. A round stays due for two hours, which
+ * is what makes a failed run recoverable: the next wake-up finds it unbuilt and
+ * tries again. --force ignores both the clock and what has already been built,
+ * which is what the manual button on GitHub is for.
  */
 
 import { loadConfig } from './config.ts';
@@ -27,11 +29,11 @@ import { dropDuplicates } from './dedupe.ts';
 import { selectStories } from './select.ts';
 import { writeStories } from './summarize.ts';
 import { attachImages } from './image.ts';
-import { digestAlreadyDone, saveDigest } from './save.ts';
+import { digestState, saveDigest } from './save.ts';
 import { cleanup } from './cleanup.ts';
 import { renderSummary, renderTopic, startFile } from './render.ts';
 import { detail, fail, heading, reason, step, warn } from './log.ts';
-import { isDigestTime, romeDate, romeHour } from './time.ts';
+import { dueSlot, romeDate, romeHour } from './time.ts';
 import type { Profile, TopicResult } from './types.ts';
 
 interface Options {
@@ -80,18 +82,22 @@ async function runTopic(topic: TopicResult['topic']): Promise<TopicResult> {
 
 /** Everything for one account. Returns how many stories it produced. */
 async function runProfile(profile: Profile, options: Options, date: string): Promise<number> {
-  step(`account ${profile.email}, lingua ${profile.language}, digest alle ${profile.digestHour}:00`);
+  const when = profile.digestHours.map((h) => `${h}:00`).join(' e ');
+  step(`account ${profile.email}, lingua ${profile.language}, digest alle ${when}`);
 
   // The workflow wakes hourly for everyone; each account is served at its own
-  // hour. --force is what makes a manual run ignore the appointment.
-  if (!options.dryRun && !options.force && !isDigestTime(profile.digestHour)) {
-    step(`non e' la sua ora: a Roma sono le ${romeHour()}:00`);
-    return 0;
-  }
-
-  if (!options.dryRun && (await digestAlreadyDone(profile.id, date))) {
-    step("il digest di oggi esiste gia' ed e' completo: salto");
-    return 0;
+  // hours, and each round only once a day. --force means "now, whatever the
+  // clock says and whatever has already been built" - which is what makes the
+  // manual button on GitHub useful for checking a change to a topic.
+  let slot = romeHour();
+  if (!options.dryRun && !options.force) {
+    const state = await digestState(profile.id, date);
+    const due = dueSlot(profile.digestHours, state.doneHours);
+    if (due === null) {
+      step(`non e' la sua ora: a Roma sono le ${romeHour()}:00`);
+      return 0;
+    }
+    slot = due;
   }
 
   const topics = await activeTopics(profile.id);
@@ -119,7 +125,7 @@ async function runProfile(profile: Profile, options: Options, date: string): Pro
 
   if (options.dryRun) return results.reduce((n, r) => n + r.stories.length, 0);
 
-  const saved = await saveDigest({ userId: profile.id, date, results, failedTopics: failed });
+  const saved = await saveDigest({ userId: profile.id, date, slot, results, failedTopics: failed });
   return saved.stories;
 }
 
