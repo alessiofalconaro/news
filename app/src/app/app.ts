@@ -423,16 +423,31 @@ export class App {
 
     window.addEventListener('resize', () => this.placeIndicator());
 
-    // The keyboard changes the visual viewport size; an elastic overscroll only
-    // fires 'scroll', which we ignore on purpose.
-    const viewport = window.visualViewport;
-    if (viewport) {
-      viewport.addEventListener('resize', () => {
-        this.keyboard.set(viewport.height < window.innerHeight - 120);
-        requestAnimationFrame(() => this.placeIndicator());
-      });
-    }
+    // The dock slides away for the keyboard, and a shrunken viewport used to be
+    // the whole test. That is not enough: coming back from another app, iOS
+    // reports a short viewport for a moment, so the dock hid itself and stayed
+    // hidden until something moved. A keyboard is only open if something is
+    // being typed into, so the focused element has to agree.
+    const keyboardOpen = (): boolean => {
+      const viewport = window.visualViewport;
+      if (!viewport) return false;
+      const shrunk = viewport.height < window.innerHeight - 120;
+      return shrunk && isEditable(document.activeElement);
+    };
+    const recheck = () => {
+      this.keyboard.set(keyboardOpen());
+      requestAnimationFrame(() => this.placeIndicator());
+    };
 
+    window.visualViewport?.addEventListener('resize', recheck);
+    // Focus moving in or out of a field is the other half of the same question.
+    document.addEventListener('focusin', recheck);
+    document.addEventListener('focusout', recheck);
+    // And coming back to the app settles whatever the last resize left behind.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') recheck();
+    });
+    window.addEventListener('pageshow', recheck);
   }
 
   label(key: (typeof NAV)[number]['key']): string {
@@ -556,4 +571,11 @@ export class App {
     if (changing) void this.router.navigate([NAV[index].path]);
     else window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+}
+
+/** Whether something is being typed into: the only reason a keyboard is up. */
+function isEditable(element: Element | null): boolean {
+  if (!(element instanceof HTMLElement)) return false;
+  if (element.isContentEditable) return true;
+  return ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName);
 }

@@ -33,12 +33,12 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* Breathing room above the header controls, on top of the safe area. iOS
-     leaves a few blurred pixels along the very top edge of the web view, and
-     without this the top of the IT/EN pill and of the title letters catches
-     them and comes out smeared. 14px is what it took to clear it on an iPhone
-     with a Dynamic Island; 16 already read as too low. */
-  --topbar-clear: 14px;
+  /* Breathing room above the header controls, on top of the safe area.
+     It was 14px while the app drew under a translucent status bar, which iOS
+     frosts: the controls had to clear the frosted band. With the bar opaque
+     the web view starts below it, there is nothing to clear, and the same
+     14px only pushed everything down for no reason. */
+  --topbar-clear: 2px;
 
   --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-body:

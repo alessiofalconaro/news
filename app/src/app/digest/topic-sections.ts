@@ -1,4 +1,12 @@
-import { Component, computed, inject, input } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  afterRenderEffect,
+  computed,
+  inject,
+  input,
+  viewChildren,
+} from '@angular/core';
 import { I18n } from '../i18n/i18n.service';
 import { TOPIC_COLORS, TopicsService } from '../topics/topics.service';
 import { StoryCard } from './story-card';
@@ -58,7 +66,12 @@ function colorFromName(name: string): string {
           <span class="count">{{ t().today.storyCount(group.stories.length) }}</span>
         </header>
 
-        <div class="stories" [class.swipe]="mode() === 'cards'">
+        <div
+          #row
+          class="stories"
+          [class.swipe]="mode() === 'cards'"
+          (scroll)="fitToCard(row)"
+        >
           @for (story of group.stories; track story.id) {
             <app-story-card [story]="story" [accent]="group.color" />
           }
@@ -130,8 +143,18 @@ function colorFromName(name: string): string {
          rubber-banding, which any reimplementation gets subtly wrong. */
       .stories.swipe {
         flex-direction: row;
+        /* Cards keep their own height instead of stretching to the tallest:
+           the row is then sized to the card on screen, by fitToCard. */
+        align-items: flex-start;
+        transition: height 0.2s ease;
         gap: 12px;
         overflow-x: auto;
+        /* Spelled out, because a row that scrolls sideways would otherwise
+           scroll vertically too: while the height is still easing towards a
+           taller card the card overflows it, and a finger resting there would
+           drag the row instead of the page. Clipping is also what the
+           animation wants. */
+        overflow-y: hidden;
         scroll-snap-type: x mandatory;
         scrollbar-width: none;
         /* Bleeds through the page padding so a card can sit edge to edge. */
@@ -157,6 +180,55 @@ export class TopicSections {
   readonly t = this.i18n.t;
 
   readonly stories = input.required<Story[]>();
+
+  private readonly rows = viewChildren<ElementRef<HTMLElement>>('row');
+
+  constructor() {
+    // The first card has to be measured too, not only the ones scrolled to,
+    // and again whenever the stories or the layout change.
+    afterRenderEffect(() => {
+      const swiping = this.mode() === 'cards';
+      this.groups();
+      for (const row of this.rows()) {
+        if (swiping) this.fitToCard(row.nativeElement);
+        else row.nativeElement.style.height = '';
+      }
+    });
+  }
+
+  /**
+   * Sizes a swipeable row to the card currently snapped in it.
+   *
+   * Laid out as a flex row every card is as tall as the tallest, so a short
+   * story left a band of empty space above the next topic - space belonging to
+   * a card three swipes away. There is no CSS for "be as tall as the child
+   * currently snapped", so it is measured.
+   */
+  fitToCard(row: HTMLElement): void {
+    if (this.mode() !== 'cards') return;
+    if (!row.clientWidth) return;
+
+    // The card nearest the middle, found by measuring rather than by dividing
+    // the scroll offset: the cards are separated by a gap and the row has side
+    // padding, so one step is not one row width and the arithmetic came out
+    // wrong - the row kept the first card's height however far it was scrolled.
+    const box = row.getBoundingClientRect();
+    const middle = box.left + box.width / 2;
+
+    let nearest: HTMLElement | null = null;
+    let best = Infinity;
+    for (const child of row.children) {
+      if (!(child instanceof HTMLElement)) continue;
+      const rect = child.getBoundingClientRect();
+      const distance = Math.abs(rect.left + rect.width / 2 - middle);
+      if (distance < best) {
+        best = distance;
+        nearest = child;
+      }
+    }
+
+    if (nearest) row.style.height = `${nearest.offsetHeight}px`;
+  }
 
   /**
    * Groups in the order the pipeline produced them, which is the order the user
