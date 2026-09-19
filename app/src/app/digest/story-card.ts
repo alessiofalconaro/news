@@ -1,7 +1,7 @@
 import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
 import { I18n } from '../i18n/i18n.service';
 import { DigestService } from './digest.service';
-import type { Story } from '../core/models';
+import type { Story, StorySource } from '../core/models';
 
 /**
  * One story: text on the left, thumbnail on the right.
@@ -40,7 +40,7 @@ import type { Story } from '../core/models';
       </div>
 
       <div class="foot">
-        <a class="read" [href]="story().primaryUrl" target="_blank" rel="noopener">
+        <a class="read" [href]="readUrl()" target="_blank" rel="noopener">
           {{ t().today.readArticle }} ›
         </a>
         <span class="meta">
@@ -75,14 +75,33 @@ import type { Story } from '../core/models';
             <li>
               <a [href]="source.url" target="_blank" rel="noopener">
                 <span class="name">{{ source.name }}</span>
+                @if (langTag(source)) {
+                  <span class="tag">{{ langTag(source) }}</span>
+                }
                 <span class="go" aria-hidden="true">›</span>
               </a>
 
-              @if (source.url === story().primaryUrl) {
-                <span class="badge">{{ t().today.sourcesPrimary }}</span>
+              <!-- A star rather than a word: the row already carries the
+                   outlet's name and a second piece of text beside it read as
+                   part of the link. Filled is the one that opens. -->
+              @if (source.url === readUrl()) {
+                <span class="star on" [title]="t().today.sourcesPrimary">
+                  <svg viewBox="0 0 20 20" aria-hidden="true">
+                    <path d="M10 2.8l2.24 4.54 5.01.73-3.62 3.53.85 4.99L10 14.24l-4.48 2.35.85-4.99L2.75 8.07l5.01-.73z" />
+                  </svg>
+                  <span class="sr">{{ t().today.sourcesPrimary }}</span>
+                </span>
               } @else {
-                <button class="pick" [disabled]="saving()" (click)="makePrimary(source.url)">
-                  {{ t().today.sourcesUse }}
+                <button
+                  class="star"
+                  [disabled]="saving()"
+                  [title]="t().today.sourcesUse"
+                  [attr.aria-label]="t().today.sourcesUse"
+                  (click)="makeDefault(source.url)"
+                >
+                  <svg viewBox="0 0 20 20" aria-hidden="true">
+                    <path d="M10 2.8l2.24 4.54 5.01.73-3.62 3.53.85 4.99L10 14.24l-4.48 2.35.85-4.99L2.75 8.07l5.01-.73z" />
+                  </svg>
                 </button>
               }
             </li>
@@ -276,6 +295,9 @@ import type { Story } from '../core/models';
         font-size: 0.9rem;
       }
       .list .name {
+        /* Takes the slack, so the language tag and the chevron stay together
+           on the right instead of being spread across the row. */
+        flex: 1;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -285,34 +307,57 @@ import type { Story } from '../core/models';
         flex: none;
         color: var(--text-dim);
       }
+      .list .tag {
+        flex: none;
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: var(--surface-3);
+        color: var(--text-dim);
+        font-size: 0.64rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+      }
       /* Which one "Read the article" opens, and how to move it. Side by side
          with the link rather than inside it: opening a source and adopting it
          are two different intentions and must not share one tap target. */
-      .badge,
-      .pick {
+      .star {
         flex: none;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 0 12px;
+        width: 40px;
         border-radius: var(--radius-sm);
-        font-size: 0.74rem;
-        font-weight: 700;
-        text-align: center;
-        white-space: nowrap;
-      }
-      .badge {
-        border: 1px solid var(--accent, var(--brand));
-        color: var(--accent, var(--brand));
-        background: color-mix(in srgb, var(--accent, var(--brand)) 12%, transparent);
-      }
-      .pick {
         border: 1px solid var(--border);
         background: var(--surface);
-        color: var(--text-soft);
+        color: var(--text-dim);
+        padding: 0;
       }
-      .pick:disabled {
+      .star svg {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.5;
+        stroke-linejoin: round;
+      }
+      .star.on {
+        border-color: var(--accent, var(--brand));
+        background: color-mix(in srgb, var(--accent, var(--brand)) 12%, transparent);
+        color: var(--accent, var(--brand));
+      }
+      .star.on svg {
+        fill: currentColor;
+      }
+      .star:disabled {
         opacity: 0.5;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
       }
       .err {
         margin: 12px 0 0;
@@ -375,18 +420,47 @@ export class StoryCard {
   }
 
   /**
+   * Which source "Read the article" opens, in the language being read.
+   *
+   * The reader's own pick first. Failing that the AI's, but only while it is
+   * in the right language: reading in English, the most complete account is no
+   * use if it is in Italian. Stories built before the pipeline recorded each
+   * source's language carry none, and those fall back to the AI's pick rather
+   * than guessing.
+   */
+  readonly readUrl = computed(() => {
+    const story = this.story();
+    const lang = this.i18n.lang();
+
+    const chosen = lang === 'en' ? story.chosenUrlEn : story.chosenUrlIt;
+    if (chosen) return chosen;
+
+    const primary = story.sources.find((s) => s.url === story.primaryUrl);
+    if (!primary?.lang || primary.lang === lang) return story.primaryUrl;
+
+    // Sources arrive in the order the AI ranked them, so the first match is
+    // the best one that is readable here.
+    return story.sources.find((s) => s.lang === lang)?.url ?? story.primaryUrl;
+  });
+
+  langTag(source: { lang?: 'it' | 'en' | null }): string {
+    return source.lang ? source.lang.toUpperCase() : '';
+  }
+
+  /**
    * Moves "Read the article" onto another of the story's outlets.
    *
    * The AI picks the one it judged most complete, which is a guess about a
    * reader it has never met: someone who cannot open one paper, or simply
-   * prefers another, should be able to say so. Written to the story itself, so
-   * the choice is there on every device and stays with the archived digest.
+   * prefers another, should be able to say so. Recorded against the language
+   * in use, and on the story itself, so the choice is there on every device
+   * and stays with the archived digest.
    */
-  async makePrimary(url: string): Promise<void> {
+  async makeDefault(url: string): Promise<void> {
     this.saving.set(true);
     this.pickFailed.set(false);
     try {
-      await this.digests.setPrimaryUrl(this.story().id, url);
+      await this.digests.setChosenUrl(this.story().id, this.i18n.lang(), url);
     } catch {
       this.pickFailed.set(true);
     } finally {
@@ -416,10 +490,11 @@ export class StoryCard {
    * the AI picked, that is the link kept.
    */
   readonly sourceList = computed(() => {
-    const byName = new Map<string, { name: string; url: string }>();
+    const open = this.readUrl();
+    const byName = new Map<string, StorySource>();
     for (const source of this.story().sources) {
       const kept = byName.get(source.name);
-      if (!kept || source.url === this.story().primaryUrl) byName.set(source.name, source);
+      if (!kept || source.url === open) byName.set(source.name, source);
     }
     return [...byName.values()];
   });

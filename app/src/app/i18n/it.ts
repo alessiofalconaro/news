@@ -60,9 +60,9 @@ export const it = {
     readArticle: 'Leggi l’articolo',
     sourcesTitle: 'Le fonti di questa notizia',
     sourcesBody:
-      'Le testate che hanno raccontato lo stesso fatto. «Leggi l’articolo» apre quella predefinita, scelta dall’AI; tocca «Usa questa» su un’altra e da lì in poi aprirà quella.',
+      'Le testate che hanno raccontato lo stesso fatto. La stella segna quella che apre «Leggi l’articolo»: toccala su un’altra per cambiarla. Vale per la lingua in cui stai leggendo, così in inglese ti si apre una testata inglese.',
     sourcesPrimary: 'Predefinita',
-    sourcesUse: 'Usa questa',
+    sourcesUse: 'Rendila predefinita',
     sourcesUseError: 'Non sono riuscito a salvare la scelta.',
     filterClear: 'Tutti i topic',
     layoutToList: 'Vedi in elenco',

@@ -49,8 +49,16 @@ export interface Article {
   url: string;
   snippet: string;
   publishedAt: Date;
+  /** The language of the feed it came from; null when the feed does not say. */
+  lang: 'it' | 'en' | null;
   /** Which feed it came from, for the dry run's own accounting. */
   feed: string;
+}
+
+/** One feed to read, and the language whatever it produces is written in. */
+export interface Feed {
+  url: string;
+  lang: 'it' | 'en' | null;
 }
 
 /** A group of articles the model judged to be the same news. */

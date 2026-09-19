@@ -87,6 +87,12 @@ export interface Digest {
 export interface StorySource {
   name: string;
   url: string;
+  /**
+   * The language this outlet filed it in. Absent on stories built before the
+   * pipeline started recording it, and null for a feed a topic added by hand,
+   * which could be in anything.
+   */
+  lang?: 'it' | 'en' | null;
 }
 
 export interface Story {
@@ -103,7 +109,15 @@ export interface Story {
   headlineEn: string;
   summaryIt: string;
   summaryEn: string;
+  /** The outlet the AI judged most complete. */
   primaryUrl: string;
+  /**
+   * The reader's own pick, one per language: the source they would rather open
+   * in Italian is not the one they would rather open in English. The only
+   * fields on a story the browser is allowed to write.
+   */
+  chosenUrlIt?: string;
+  chosenUrlEn?: string;
   /**
    * Picture of what the story is about, not a photo of the event: the article
    * page is unreachable behind Google News redirects, so this comes from the

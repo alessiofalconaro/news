@@ -56,9 +56,9 @@ export const en: Dictionary = {
     readArticle: 'Read the article',
     sourcesTitle: 'The sources for this story',
     sourcesBody:
-      'The outlets that covered the same event. “Read the article” opens the default one; tap “Use this” to change it, and from then on it opens that.',
+      'The outlets that covered the same event. The star marks the one “Read the article” opens: tap it on another to change that. It applies to the language you are reading in, so in Italian you get an Italian outlet.',
     sourcesPrimary: 'Default',
-    sourcesUse: 'Use this',
+    sourcesUse: 'Make it the default',
     sourcesUseError: 'I could not save that choice.',
     filterClear: 'All topics',
     layoutToList: 'Show as a list',

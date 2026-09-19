@@ -11,7 +11,7 @@ import { XMLParser } from 'fast-xml-parser';
 import { ARTICLE_MAX_AGE_HOURS } from './config.ts';
 import { hoursAgo } from './time.ts';
 import { detail, reason, warn } from './log.ts';
-import type { Article, Topic } from './types.ts';
+import type { Article, Feed, Topic } from './types.ts';
 
 const GOOGLE_NEWS_FEEDS = {
   it: 'https://news.google.com/rss/search?q=<q>&hl=it&gl=IT&ceid=IT:it',
@@ -25,13 +25,27 @@ const parser = new XMLParser({
   processEntities: true,
 });
 
-/** Feed URLs for a topic: one or both Google News locales, then the extras. */
-export function feedUrlsFor(topic: Topic, searchQuery: string): string[] {
+/**
+ * Feed URLs for a topic: one or both Google News locales, then the extras.
+ *
+ * Each carries the language it is written in, and that travels with every
+ * article it produces. The app opens whichever source matches the language it
+ * is being read in, and a link on its own says nothing about its language - a
+ * Google News address is an opaque blob. A feed the topic added by hand could
+ * be in anything, so it says null rather than guessing.
+ */
+export function feedUrlsFor(topic: Topic, searchQuery: string): Feed[] {
   const query = encodeURIComponent(searchQuery.trim());
   const locales =
     topic.sourceLanguage === 'both' ? (['it', 'en'] as const) : ([topic.sourceLanguage] as const);
-  const google = locales.map((l) => GOOGLE_NEWS_FEEDS[l].replace('<q>', query));
-  return [...google, ...topic.extraFeeds.filter((f) => f.trim())];
+  const google: Feed[] = locales.map((lang) => ({
+    url: GOOGLE_NEWS_FEEDS[lang].replace('<q>', query),
+    lang,
+  }));
+  const extras: Feed[] = topic.extraFeeds
+    .filter((f) => f.trim())
+    .map((url) => ({ url, lang: null }));
+  return [...google, ...extras];
 }
 
 /** Strips the markup Google News puts in `description` and collapses spaces. */
@@ -77,7 +91,7 @@ function usefulSnippet(snippet: string, title: string, source: string): string {
   return stripped.length > known.length * 1.3 ? snippet : '';
 }
 
-function readItem(raw: unknown, feed: string): Article | null {
+function readItem(raw: unknown, feed: Feed): Article | null {
   const it = raw as Record<string, unknown>;
   const url = String(it['link'] ?? '').trim();
   const rawTitle = plainText(it['title']);
@@ -103,7 +117,8 @@ function readItem(raw: unknown, feed: string): Article | null {
     url,
     snippet: usefulSnippet(plainText(it['description']), rawTitle, source),
     publishedAt: published,
-    feed,
+    lang: feed.lang,
+    feed: feed.url,
   };
 }
 
@@ -115,8 +130,8 @@ function hostOf(url: string): string {
   }
 }
 
-async function fetchFeed(url: string): Promise<Article[]> {
-  const response = await fetch(url, {
+async function fetchFeed(feed: Feed): Promise<Article[]> {
+  const response = await fetch(feed.url, {
     headers: {
       // Google News answers an unknown agent with an empty channel.
       'user-agent': 'Mozilla/5.0 (compatible; NewsDigest/1.0; +https://github.com)',
@@ -127,7 +142,7 @@ async function fetchFeed(url: string): Promise<Article[]> {
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const parsed = parser.parse(await response.text()) as unknown;
   return itemsOf(parsed)
-    .map((item) => readItem(item, url))
+    .map((item) => readItem(item, feed))
     .filter((a): a is Article => a !== null);
 }
 
@@ -141,14 +156,14 @@ export async function collectArticles(topic: Topic, searchQuery: string): Promis
   const cutoff = hoursAgo(ARTICLE_MAX_AGE_HOURS);
   const collected: Article[] = [];
 
-  for (const url of feedUrlsFor(topic, searchQuery)) {
+  for (const feed of feedUrlsFor(topic, searchQuery)) {
     try {
-      const articles = await fetchFeed(url);
+      const articles = await fetchFeed(feed);
       const fresh = articles.filter((a) => a.publishedAt >= cutoff);
-      detail(`${fresh.length}/${articles.length} freschi da ${hostOf(url) || url}`);
+      detail(`${fresh.length}/${articles.length} freschi da ${hostOf(feed.url) || feed.url}`);
       collected.push(...fresh);
     } catch (error) {
-      warn(`feed saltato, ${hostOf(url) || url}: ${reason(error)}`);
+      warn(`feed saltato, ${hostOf(feed.url) || feed.url}: ${reason(error)}`);
     }
   }
 

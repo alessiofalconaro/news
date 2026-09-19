@@ -112,14 +112,17 @@ export class DigestService {
   }
 
   /**
-   * Points a story's "read the article" link at another of its own sources.
+   * Points a story's "read the article" link at another of its own sources,
+   * for one language.
    *
    * The one exception to stories being read-only here: the pipeline decides
    * everything about a story except which outlet you would rather read it in,
-   * and that is not something it can know. The rules let the owner change this
-   * single field and nothing else.
+   * and that is not something it can know. Per language because the answer
+   * differs by language - reading in English, an Italian paper is no use.
+   * The rules let the owner change these two fields and nothing else.
    */
-  async setPrimaryUrl(storyId: string, url: string): Promise<void> {
-    await updateDoc(doc(db, 'stories', storyId), { primaryUrl: url });
+  async setChosenUrl(storyId: string, lang: 'it' | 'en', url: string): Promise<void> {
+    const field = lang === 'en' ? 'chosenUrlEn' : 'chosenUrlIt';
+    await updateDoc(doc(db, 'stories', storyId), { [field]: url });
   }
 }

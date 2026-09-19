@@ -41,6 +41,17 @@ service cloud.firestore {
             && d.digestHours.hasOnly([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]));
     }
 
+    // Google News links are redirects carrying an encoded blob, and they run
+    // long: a sixth of them are over 500 characters and the longest seen is
+    // 837. An earlier limit of 500 here refused exactly those, which looked
+    // from the app like the choice sometimes not taking.
+    function validChosenUrls(d) {
+      return (!('chosenUrlIt' in d.keys())
+          || (d.chosenUrlIt is string && d.chosenUrlIt.size() > 0 && d.chosenUrlIt.size() <= 2000))
+        && (!('chosenUrlEn' in d.keys())
+          || (d.chosenUrlEn is string && d.chosenUrlEn.size() > 0 && d.chosenUrlEn.size() <= 2000));
+    }
+
     function owns(userId) {
       return signedIn() && request.auth.uid == userId;
     }
@@ -101,15 +112,14 @@ service cloud.firestore {
       allow create, delete: if false;
 
       // The one thing a reader may change about their own story: which of its
-      // sources "Leggi l'articolo" opens. The AI's pick is a guess about a
-      // reader it has never met. Only that field, and only on your own row -
-      // everything else about a story stays the pipeline's to write.
+      // sources "Leggi l'articolo" opens, once per language. The AI's pick is
+      // a guess about a reader it has never met. Only these fields, and only
+      // on your own row - the rest of a story stays the pipeline's to write.
       allow update: if allowed()
         && owns(resource.data.userId)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['primaryUrl'])
-        && request.resource.data.primaryUrl is string
-        && request.resource.data.primaryUrl.size() > 0
-        && request.resource.data.primaryUrl.size() <= 500;
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['chosenUrlIt', 'chosenUrlEn'])
+        && validChosenUrls(request.resource.data);
     }
 
     // "Le notizie adesso": the app leaves a request here and the pipeline picks

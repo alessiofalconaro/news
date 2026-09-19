@@ -125,7 +125,10 @@ export async function saveDigest(input: SaveInput): Promise<{ id: string; storie
         summaryEn: story.summaryEn,
         primaryUrl: primary.url,
         imageUrl: story.imageUrl,
-        sources: story.articles.map((a) => ({ name: a.source, url: a.url })),
+        // The language rides along with each source: the app opens the one
+        // that matches the language it is being read in, and nothing about a
+        // Google News link says which language is behind it.
+        sources: story.articles.map((a) => ({ name: a.source, url: a.url, lang: a.lang })),
         sourceCount: new Set(story.articles.map((a) => a.source)).size,
         latestPublishedAt: Math.max(...story.articles.map((a) => a.publishedAt.getTime())),
       });
