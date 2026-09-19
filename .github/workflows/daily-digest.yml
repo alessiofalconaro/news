@@ -1,22 +1,23 @@
 name: Digest quotidiano
 
 # Ogni account sceglie dall'app a che ora vuole il digest, una o due volte al
-# giorno, quindi il workflow si sveglia ogni mezzora e lo script costruisce solo
-# per chi ha appuntamento in quel momento. La mezzora, invece dell'ora, serve
-# soprattutto al pulsante "Aggiorna adesso" dentro l'app: dimezza l'attesa fra
-# la richiesta e il digest.
+# giorno, e lo sceglie nel fuso in cui si trova. Il workflow si sveglia ogni
+# mezzora e lo script costruisce solo per chi ha appuntamento in quel momento.
 #
-# Le ore sono UTC. L'Italia e' UTC+1 d'inverno e UTC+2 d'estate, quindi
-# 04:00-21:00 UTC copre le 05:00-23:00 italiane: abbastanza da servire qualunque
-# ora fra le 6 e le 22, che sono quelle che l'app offre, in tutte e due le
-# stagioni. Di notte non si sveglia: sarebbero minuti spesi per niente.
+# Sveglio 24 ore su 24, e non piu' solo di giorno: le 10:00 di chi sta a Tokyo
+# sono l'01:00 UTC, quindi una finestra tarata sull'Italia lascerebbe scoperto
+# chiunque viaggi. Non essendoci un fuso privilegiato, non c'e' una notte in
+# cui dormire.
 #
 # Costo: un'esecuzione a vuoto dura una manciata di secondi ma viene conteggiata
-# come un minuto, quindi 36 al giorno fanno circa 1080 minuti al mese sui 2000
-# inclusi nel piano gratuito per i repository privati.
+# come un minuto, quindi 48 al giorno fanno circa 1440 minuti al mese, piu' un
+# paio di centinaia per le costruzioni vere: circa 1700 sui 2000 inclusi nel
+# piano gratuito per i repository privati. Se un giorno diventasse stretto,
+# passare a ogni ora dimezza il conto e costa solo mezz'ora di attesa in piu'
+# sul pulsante "Aggiorna adesso".
 on:
   schedule:
-    - cron: '0,30 4-21 * * *'
+    - cron: '0,30 * * * *'
   workflow_dispatch:
     inputs:
       force:

@@ -7,7 +7,7 @@
  */
 
 import { appendFileSync, writeFileSync } from 'node:fs';
-import { romeStamp } from './time.ts';
+import { FALLBACK_ZONE, stamp } from './time.ts';
 import type { TopicResult } from './types.ts';
 
 /**
@@ -59,7 +59,7 @@ export function renderTopic(result: TopicResult): void {
     const outlets = [...new Set(story.articles.map((a) => a.source))];
     out(`\n   fonti (${outlets.length}): ${outlets.join(', ')}`);
     if (primary) {
-      out(`   principale: ${primary.source}, ${romeStamp(primary.publishedAt)}`);
+      out(`   principale: ${primary.source}, ${stamp(FALLBACK_ZONE, primary.publishedAt)}`);
       out(`   ${primary.url}`);
     }
     out(`   ${rule()}`);

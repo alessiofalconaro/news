@@ -13,7 +13,7 @@ import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import type { ServiceAccount } from 'firebase-admin/app';
 import { SEEN_ARTICLE_DAYS } from './config.ts';
 import { seenKey } from './dedupe.ts';
-import { daysAgo } from './time.ts';
+import { daysAgo, safeZone } from './time.ts';
 import type { Article, Profile, Topic } from './types.ts';
 
 /**
@@ -59,6 +59,7 @@ export async function findProfileByEmail(email: string): Promise<Profile | null>
     displayName: String(data['displayName'] ?? ''),
     language: data['language'] === 'en' ? 'en' : 'it',
     digestHours: hoursOf(data),
+      timeZone: safeZone(data['timeZone']),
   };
 }
 
@@ -73,6 +74,7 @@ export async function allProfiles(): Promise<Profile[]> {
       displayName: String(data['displayName'] ?? ''),
       language: data['language'] === 'en' ? 'en' : 'it',
       digestHours: hoursOf(data),
+      timeZone: safeZone(data['timeZone']),
     } satisfies Profile;
   });
 }

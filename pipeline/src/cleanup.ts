@@ -10,7 +10,7 @@
  */
 
 import { getFirestore, type Query } from 'firebase-admin/firestore';
-import { daysAgo, romeDate } from './time.ts';
+import { FALLBACK_ZONE, daysAgo, localDate } from './time.ts';
 import { detail, reason, warn } from './log.ts';
 
 const SEEN_KEEP_DAYS = 14;
@@ -42,7 +42,9 @@ export async function cleanup(): Promise<void> {
     );
 
     // Digests are keyed by their local date, so the cutoff is a date string too.
-    const cutoff = romeDate(daysAgo(DIGEST_KEEP_DAYS));
+    // A housekeeping cutoff: one zone is enough, a few hours either way at
+    // ninety days makes no difference to anyone.
+    const cutoff = localDate(FALLBACK_ZONE, daysAgo(DIGEST_KEEP_DAYS));
     const old = await db.collection('digests').where('digestDate', '<', cutoff).get();
     for (const doc of old.docs) {
       await deleteAll(db.collection('stories').where('digestId', '==', doc.id), 'storie vecchie');

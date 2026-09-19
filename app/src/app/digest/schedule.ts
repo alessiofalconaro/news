@@ -13,10 +13,9 @@
 /** How close to a scheduled round a request has to be to take its place. */
 const REPLACES_WITHIN_MINUTES = 60;
 
-/** Minutes since midnight in Rome, whatever the device's own timezone is. */
-export function romeMinutesNow(at: Date = new Date()): number {
+/** Minutes since midnight here. */
+export function localMinutesNow(at: Date = new Date()): number {
   const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/Rome',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
@@ -30,7 +29,7 @@ export function romeMinutesNow(at: Date = new Date()): number {
  * an extra round on top of the schedule.
  */
 export function wouldReplace(digestHours: number[], at: Date = new Date()): number | null {
-  const asked = romeMinutesNow(at);
+  const asked = localMinutesNow(at);
   const close = digestHours.filter(
     (hour) => hour * 60 - asked >= 0 && hour * 60 - asked <= REPLACES_WITHIN_MINUTES,
   );
@@ -39,62 +38,26 @@ export function wouldReplace(digestHours: number[], at: Date = new Date()): numb
 
 /** The next scheduled round after now, for the "the schedule still stands" line. */
 export function nextRound(digestHours: number[], at: Date = new Date()): number | null {
-  const asked = romeMinutesNow(at);
+  const asked = localMinutesNow(at);
   const later = digestHours.filter((hour) => hour * 60 > asked);
   return later.length ? Math.min(...later) : null;
 }
 
-/**
- * Hours, in UTC, when the workflow is awake. Mirrors the cron in
- * `.github/workflows/daily-digest.yml`, which fires on the hour and the half
- * hour between them.
- */
-const AWAKE_FROM_UTC = 4;
-const AWAKE_TO_UTC = 21;
 
 /**
  * When a request made now would actually be picked up.
  *
- * Worth saying out loud, because the gap is not obvious: the workflow sleeps
- * overnight, so pressing the button at five to midnight means the news arrives
- * at six in the morning, not at midnight. A button that silently means "in
- * seven hours" is a button that looks broken.
+ * The workflow wakes on the hour and the half hour, around the clock, so this
+ * is never more than thirty minutes away. It used to sleep at night, which
+ * made a request at five to midnight arrive at six in the morning - a gap that
+ * stopped making sense once the schedule started following the reader, since
+ * somebody else's morning is always somebody's night.
  */
 export function nextWakeUp(at: Date = new Date()): Date {
   const next = new Date(at);
   next.setUTCSeconds(0, 0);
-  // Round up to the next half hour, always forward: asking at exactly 10:00
-  // means the 10:00 wake-up has already begun without this request.
+  // Always forward: asking at exactly 10:00 means that wake-up has already
+  // begun without this request.
   next.setUTCMinutes(next.getUTCMinutes() >= 30 ? 60 : 30);
-
-  // Then walk forward until it lands in the hours the workflow is awake.
-  for (let step = 0; step < 48; step += 1) {
-    const hour = next.getUTCHours();
-    if (hour >= AWAKE_FROM_UTC && hour <= AWAKE_TO_UTC) return next;
-    next.setUTCMinutes(next.getUTCMinutes() + 30);
-  }
   return next;
-}
-
-/** True when the device is somewhere the digest hours do not read literally. */
-export function awayFromItaly(): boolean {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone !== 'Europe/Rome';
-  } catch {
-    return false;
-  }
-}
-
-/**
- * The instant at which the clock in Rome next reads `hour:00`.
- *
- * The schedule is anchored to Italian time, wherever the reader happens to be:
- * a digest at ten means ten in Italy. Formatting this instant with the device's
- * own clock is what turns that into something a traveller can act on - four in
- * the morning in New York - instead of a number that quietly means nothing
- * local.
- */
-export function romeHourAsInstant(hour: number, at: Date = new Date()): Date {
-  const minutesFromNow = hour * 60 - romeMinutesNow(at);
-  return new Date(at.getTime() + minutesFromNow * 60_000);
 }

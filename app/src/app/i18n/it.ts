@@ -125,9 +125,7 @@ export const it = {
     themeLight: 'Chiaro',
     digestTime: 'Ora del digest',
     digestTimeHint:
-      'A che ora vuoi trovare le notizie pronte, in ora italiana. Vale solo per te.',
-    digestTimeAway: (times: string) =>
-      `Sei in un fuso diverso da quello italiano: dove ti trovi ora arrivano verso le ${times}.`,
+      'A che ora vuoi trovare le notizie pronte, ora locale di dove ti trovi. Vale solo per te.',
     digestFirst: 'Prima tornata',
     digestSecond: 'Seconda tornata',
     digestNone: 'Nessuna',
@@ -136,8 +134,6 @@ export const it = {
       'Chiede le notizie fuori orario. Non e’ immediato: il digest viene preparato entro mezz’ora.',
     refreshPending: 'Richiesta in corso…',
     refreshWhen: (time: string) => ` Le notizie arrivano verso le ${time}.`,
-    refreshWhenTomorrow: (time: string) =>
-      ` Di notte il sistema dorme: le notizie arrivano domattina verso le ${time}.`,
     refreshReplaces: (hour: string) =>
       `Prenderà il posto della tornata delle ${hour}: non ne riceverai due.`,
     refreshExtraWithNext: (hour: string) =>

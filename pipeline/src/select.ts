@@ -11,7 +11,7 @@
 import { z } from 'zod';
 import { ask } from './gemini.ts';
 import type { Article, SelectedStory, Topic } from './types.ts';
-import { romeStamp } from './time.ts';
+import { FALLBACK_ZONE, stamp } from './time.ts';
 
 const schema = {
   type: 'object',
@@ -44,7 +44,7 @@ function articleLines(articles: Article[]): string {
   return articles
     .map(
       (a) =>
-        `${a.id} | ${romeStamp(a.publishedAt)} | ${a.source} | ${a.title}` +
+        `${a.id} | ${stamp(FALLBACK_ZONE, a.publishedAt)} | ${a.source} | ${a.title}` +
         (a.snippet ? `\n     ${a.snippet.slice(0, 300)}` : ''),
     )
     .join('\n');

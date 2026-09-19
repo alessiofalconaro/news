@@ -75,6 +75,16 @@ export class ProfileService {
         this.profile.set({ ...data, id: uid });
         this.ready.set(true);
 
+        // The schedule follows the reader, so the zone is refreshed whenever
+        // the app is opened somewhere else. Opening it after a flight is the
+        // only moment we can know they have moved.
+        const here = deviceZone();
+        if (data.timeZone !== here) {
+          void updateDoc(doc(db, 'profiles', uid), { timeZone: here }).catch(() => {
+            // Offline: the persistent cache queues the write.
+          });
+        }
+
         // First load after sign-in: the stored language wins over the guess we
         // made from the browser. After that the user's toggle wins.
         if (!this.languageApplied) {
@@ -93,9 +103,19 @@ export class ProfileService {
       displayName,
       language,
       digestHours: [DEFAULT_DIGEST_HOUR],
+      timeZone: deviceZone(),
       createdAt: Date.now(),
     }).catch(() => {
       // Rules rejected it, which means the account is not on the allow list.
     });
+  }
+}
+
+/** The zone the browser believes it is in, or Rome if it will not say. */
+function deviceZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Rome';
+  } catch {
+    return 'Europe/Rome';
   }
 }

@@ -38,10 +38,10 @@ import { renderSummary, renderTopic, startFile } from './render.ts';
 import { detail, fail, heading, reason, step, warn } from './log.ts';
 import {
   dueSlot,
+  localDate,
+  localHour,
+  localMinutes,
   requestedRound,
-  romeDate,
-  romeHour,
-  romeMinutes,
   scheduledRound,
 } from './time.ts';
 import type { Profile, TopicResult } from './types.ts';
@@ -97,9 +97,18 @@ async function runTopic(topic: TopicResult['topic']): Promise<TopicResult> {
 }
 
 /** Everything for one account. Returns how many stories it produced. */
-async function runProfile(profile: Profile, options: Options, date: string): Promise<number> {
+async function runProfile(profile: Profile, options: Options): Promise<number> {
+  // Each account has its own today, because each has its own zone: at nine in
+  // the evening in Rome it is already tomorrow in Tokyo, and the two digests
+  // belong to different days.
+  const zone = profile.timeZone;
+  const date = localDate(zone);
+
   const when = profile.digestHours.map((h) => `${h}:00`).join(' e ');
-  step(`account ${profile.email}, lingua ${profile.language}, digest alle ${when}`);
+  step(
+    `account ${profile.email}, lingua ${profile.language}, digest alle ${when}` +
+      ` (${zone}, oggi ${date})`,
+  );
 
   // The workflow wakes hourly for everyone; each account is served at its own
   // hours, and each round only once a day.
@@ -110,7 +119,7 @@ async function runProfile(profile: Profile, options: Options, date: string): Pro
   // An extra round, not a scheduled one, which is why it settles no hour: its
   // identity is the minute it was built at, so it can never overwrite one of
   // the day's scheduled rounds.
-  let round = { slot: romeMinutes(), completesHour: null as number | null };
+  let round = { slot: localMinutes(zone), completesHour: null as number | null };
   let onDemand = false;
 
   if (!options.dryRun && !options.force) {
@@ -119,16 +128,16 @@ async function runProfile(profile: Profile, options: Options, date: string): Pro
     onDemand = requestedAt !== null;
 
     if (requestedAt) {
-      round = requestedRound(profile.digestHours, state.doneHours, requestedAt);
+      round = requestedRound(zone, profile.digestHours, state.doneHours, requestedAt);
       step(
         round.completesHour === null
           ? "richiesto dall'app: una tornata in piu', il programma resta"
           : `richiesto dall'app: anticipo la tornata delle ${round.completesHour}:00`,
       );
     } else {
-      const due = dueSlot(profile.digestHours, state.doneHours);
+      const due = dueSlot(zone, profile.digestHours, state.doneHours);
       if (due === null) {
-        step(`non e' la sua ora: a Roma sono le ${romeHour()}:00`);
+        step(`non e' la sua ora: da lui sono le ${localHour(zone)}:00`);
         return 0;
       }
       round = scheduledRound(due);
@@ -211,9 +220,8 @@ async function main(): Promise<void> {
   initGemini(config.geminiApiKey);
   if (config.push) initPush(config.push.publicKey, config.push.privateKey, config.push.subject);
 
-  const date = romeDate();
   const file = startFile();
-  heading(`NewsDigest - ${options.dryRun ? 'prova a vuoto' : 'digest'} - ${date}`);
+  heading(`NewsDigest - ${options.dryRun ? 'prova a vuoto' : 'digest'}`);
   describeModel();
 
   let profiles: Profile[];
@@ -234,7 +242,7 @@ async function main(): Promise<void> {
   let total = 0;
   for (const profile of profiles) {
     try {
-      total += await runProfile(profile, options, date);
+      total += await runProfile(profile, options);
     } catch (error) {
       // One account failing must not cost the other one its digest.
       fail(`account ${profile.email}: ${reason(error)}`);

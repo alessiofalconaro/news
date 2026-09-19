@@ -25,6 +25,13 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/allowedEmails/$(email()));
     }
 
+    // A zone is just a string here: the pipeline validates it against Intl
+    // before using it, and rules have no way to check an IANA name.
+    function validTimeZone(d) {
+      return !('timeZone' in d.keys())
+        || (d.timeZone is string && d.timeZone.size() > 0 && d.timeZone.size() <= 64);
+    }
+
     // Outside the hours the workflow is awake a digest would never be built, so
     // the value is refused rather than accepted and silently ignored.
     function validDigestHours(d) {
@@ -61,11 +68,13 @@ service cloud.firestore {
       allow create: if allowed() && owns(uid)
         && request.resource.data.email == email()
         && request.resource.data.language in ['it', 'en']
-        && validDigestHours(request.resource.data);
+        && validDigestHours(request.resource.data)
+        && validTimeZone(request.resource.data);
       allow update: if allowed() && owns(uid)
         && request.resource.data.email == resource.data.email
         && request.resource.data.language in ['it', 'en']
-        && validDigestHours(request.resource.data);
+        && validDigestHours(request.resource.data)
+        && validTimeZone(request.resource.data);
       allow delete: if false;
     }
 

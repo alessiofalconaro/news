@@ -43,6 +43,14 @@ export interface Profile {
    * their news at their own times.
    */
   digestHours: number[];
+  /**
+   * IANA zone of the device, refreshed at every sign-in.
+   *
+   * The schedule follows the reader rather than a fixed country: ten in the
+   * morning means ten wherever they are, which is what someone following news
+   * from everywhere actually wants.
+   */
+  timeZone: string;
   createdAt: number;
 }
 

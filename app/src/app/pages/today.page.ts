@@ -5,9 +5,12 @@ import { TopicSections } from '../digest/topic-sections';
 import { ViewModeService } from '../digest/view-mode.service';
 import type { Story } from '../core/models';
 
-/** `YYYY-MM-DD` in Rome, the shape the pipeline writes as `digestDate`. */
-function romeToday(): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+/**
+ * `YYYY-MM-DD` here, which is what the pipeline wrote: the digest date is in
+ * the reader's own zone, and the profile carries that same zone.
+ */
+function today(): string {
+  return new Intl.DateTimeFormat('en-CA').format(new Date());
 }
 
 /**
@@ -127,7 +130,7 @@ export class TodayPage implements OnDestroy {
   readonly layoutLabel = computed(() =>
     this.viewMode.mode() === 'list' ? this.t().today.layoutToCards : this.t().today.layoutToList,
   );
-  readonly digest = computed(() => this.digests.forDate(romeToday()));
+  readonly digest = computed(() => this.digests.forDate(today()));
 
   readonly stories = signal<Story[]>([]);
   readonly storiesReady = signal(false);

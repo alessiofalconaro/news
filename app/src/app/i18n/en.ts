@@ -120,9 +120,8 @@ export const en: Dictionary = {
     themeDark: 'Dark',
     themeLight: 'Light',
     digestTime: 'Digest time',
-    digestTimeHint: 'When you want the news ready, in Italian time. It applies to you only.',
-    digestTimeAway: (times: string) =>
-      `You are in a different time zone: where you are now they arrive around ${times}.`,
+    digestTimeHint:
+      'When you want the news ready, in the local time where you are. It applies to you only.',
     digestFirst: 'First round',
     digestSecond: 'Second round',
     digestNone: 'None',
@@ -131,8 +130,6 @@ export const en: Dictionary = {
       'Asks for the news outside the schedule. Not instant: the digest is built within half an hour.',
     refreshPending: 'Request in progress…',
     refreshWhen: (time: string) => ` The stories arrive around ${time}.`,
-    refreshWhenTomorrow: (time: string) =>
-      ` The system sleeps overnight: the stories arrive tomorrow around ${time}.`,
     refreshReplaces: (hour: string) =>
       `It will take the place of the ${hour} round: you will not get two.`,
     refreshExtraWithNext: (hour: string) =>

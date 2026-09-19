@@ -4,9 +4,12 @@ import { DigestService } from '../digest/digest.service';
 import { TopicSections } from '../digest/topic-sections';
 import type { Digest, Story } from '../core/models';
 
-/** `YYYY-MM-DD` in Rome, so today can be told apart from the rest. */
-function romeToday(): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+/**
+ * `YYYY-MM-DD` here, which is what the pipeline wrote: the digest date is in
+ * the reader's own zone, and the profile carries that same zone.
+ */
+function today(): string {
+  return new Intl.DateTimeFormat('en-CA').format(new Date());
 }
 
 /** A stored `YYYY-MM-DD` back to a Date, without the timezone slipping a day. */
@@ -127,7 +130,7 @@ export class ArchivePage implements OnDestroy {
   readonly t = this.i18n.t;
   readonly digests = inject(DigestService);
 
-  readonly past = computed(() => this.digests.digests().filter((d) => d.digestDate !== romeToday()));
+  readonly past = computed(() => this.digests.digests().filter((d) => d.digestDate !== today()));
 
   readonly openId = signal<string | null>(null);
   readonly stories = signal<Story[]>([]);

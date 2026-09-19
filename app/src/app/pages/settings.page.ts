@@ -5,13 +5,7 @@ import { Theme } from '../core/theme.service';
 import { ProfileService } from '../core/profile.service';
 import { RefreshService } from '../digest/refresh.service';
 import { PushService } from '../core/push.service';
-import {
-  awayFromItaly,
-  nextRound,
-  nextWakeUp,
-  romeHourAsInstant,
-  wouldReplace,
-} from '../digest/schedule';
+import { nextRound, nextWakeUp, wouldReplace } from '../digest/schedule';
 import { DEFAULT_DIGEST_HOUR, MAX_DIGEST_HOUR, MIN_DIGEST_HOUR } from '../core/models';
 import { LangToggle } from '../lang-toggle';
 
@@ -40,10 +34,6 @@ import { LangToggle } from '../lang-toggle';
     <section class="card">
       <h2>{{ t().settings.digestTime }}</h2>
       <p class="muted">{{ t().settings.digestTimeHint }}</p>
-
-      @if (awayNote()) {
-        <p class="away">{{ awayNote() }}</p>
-      }
 
       <!-- The chosen option is marked on the option itself, not with [value] on
            the select: the options are built by a loop, so at the moment Angular
@@ -180,12 +170,6 @@ import { LangToggle } from '../lang-toggle';
         display: block;
         margin-bottom: 6px;
       }
-      .away {
-        margin: -6px 0 14px;
-        color: var(--warn);
-        font-size: 0.84rem;
-        line-height: 1.45;
-      }
       .effect {
         margin: 0 0 12px;
         color: var(--text-soft);
@@ -240,17 +224,6 @@ export class SettingsPage implements OnDestroy {
   private readonly now = signal(new Date());
   private readonly clock = setInterval(() => this.now.set(new Date()), 30_000);
 
-  /**
-   * Only shown when it says something: the hours are Italian, so on a phone
-   * set to Italian time the translation would just repeat them back.
-   */
-  readonly awayNote = computed(() => {
-    if (!awayFromItaly()) return null;
-    const at = this.now();
-    const local = this.slots().map((h) => this.i18n.time(romeHourAsInstant(h, at)));
-    return this.t().settings.digestTimeAway(local.join(' e '));
-  });
-
   readonly effect = computed(() => {
     const rounds = this.slots();
     const at = this.now();
@@ -265,13 +238,9 @@ export class SettingsPage implements OnDestroy {
           ? t.refreshExtraOnly
           : t.refreshExtraWithNext(this.label(next));
 
-    // The workflow sleeps overnight, so "within half an hour" is not always
-    // true, and a button that quietly means "in seven hours" looks broken.
-    const wake = nextWakeUp(at);
-    const overnight = wake.getTime() - at.getTime() > 2 * 3_600_000;
-    const when = this.i18n.time(wake);
-
-    return what + (overnight ? t.refreshWhenTomorrow(when) : t.refreshWhen(when));
+    // The wake-ups run around the clock now, so this is always minutes away;
+    // saying which minute is still better than leaving it to be discovered.
+    return what + t.refreshWhen(this.i18n.time(nextWakeUp(at)));
   });
 
   testNotification(): void {

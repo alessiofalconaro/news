@@ -13,7 +13,9 @@ export interface Profile {
   email: string;
   displayName: string;
   language: 'it' | 'en';
-  /** Hours in Rome this account wants a digest, one or two. */
+  /** IANA zone of the device this account last used: the schedule follows it. */
+  timeZone: string;
+  /** Hours, in that zone, at which this account wants a digest. */
   digestHours: number[];
 }
 

@@ -94,10 +94,9 @@ La richiesta viene raccolta alla prossima sveglia. Sotto il pulsante l'app
 scrive due cose: se sostituirà la tornata programmata o se se ne aggiungerà
 una, e **a che ora arriveranno le notizie**.
 
-Di giorno è entro mezz'ora. Ma **di notte il sistema dorme**: fra le 23:30 e le
-06:00 non si sveglia nessuno, quindi premendo alle 23:55 le notizie arrivano
-verso le 06:00 del mattino dopo. L'app lo scrive, invece di lasciartelo
-scoprire aspettando.
+È sempre **entro mezz'ora**, a qualunque ora: il workflow si sveglia 24 ore su
+24. Deve farlo, perché con gli orari legati al fuso di ciascuno non esiste una
+notte comune in cui dormire — le 10:00 di Tokyo sono l'01:00 UTC.
 
 **Da GitHub**, e parte in pochi secondi, ma serve accesso al repository:
 <https://github.com/alessiofalconaro/news/actions/workflows/daily-digest.yml>
@@ -164,7 +163,8 @@ notizie di `stories` non si ricostruiscono.
 
 Tutto sta nei piani gratuiti, ma i limiti esistono:
 
-- **GitHub Actions**: ~1080 minuti al mese sui 2000 inclusi. Senza carta
+- **GitHub Actions**: ~1700 minuti al mese sui 2000 inclusi. Se diventasse
+  stretto, passare da mezz'ora a un'ora dimezza il conto. Senza carta
   registrata, a minuti esauriti i job si **bloccano, non si pagano**.
 - **Gemini**: qualche decina di chiamate al giorno, due per topic più una la
   prima volta che si ricava la ricerca.
@@ -425,9 +425,15 @@ Se lo lanci **senza** la spunta e non sono le 10-12 in Italia, scrive
 ## A che ora arriva
 
 L'ora si sceglie **dall'app**, in Impostazioni → *Ora del digest*, fra le 6 e
-le 22, ed è sempre **ora italiana**: il digest delle 10:00 arriva alle 10:00 in
-Italia anche se sei dall'altra parte del mondo. Se il telefono è su un altro
-fuso, l'app scrive lì sotto a che ora corrispondono dove ti trovi. Puoi chiederne **una o due al giorno**: per esempio la mattina e la
+le 22, ed è **ora locale di dove ti trovi**: il digest delle 10:00 arriva alle
+10:00 a Roma, e alle 10:00 a Tokyo se sei a Tokyo.
+
+L'app registra nel profilo il fuso del dispositivo ogni volta che la apri, e la
+pipeline usa quello. Quindi dopo un volo il programma ti segue da solo, senza
+toccare niente: basta aprire l’app una volta arrivato.
+
+Ogni account ha anche il **proprio “oggi”**: alle 2 di notte a Roma a New York
+è ancora il giorno prima, e i due digest appartengono a giorni diversi. Puoi chiederne **una o due al giorno**: per esempio la mattina e la
 sera. Vale solo per chi la imposta, quindi tu e il tuo amico potete avere orari
 diversi.
 
