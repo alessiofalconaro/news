@@ -425,3 +425,42 @@ app-root {
   display: block;
   min-height: 100dvh;
 }
+
+/* ===== Launch splash =====
+   Written into index.html inside <app-root>, so it is on screen from the very
+   first paint, and rendered again by the shell while sign-in is being checked -
+   the same markup both times, so the handover to Angular is invisible.
+   Before this the app opened blank, then said "Avvio", then "Controllo
+   dell'accesso": a program narrating its own steps, and the two changes of text
+   made a short wait feel like a long one. */
+.boot {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: var(--bg);
+}
+.boot img {
+  width: 76px;
+  height: 76px;
+  border-radius: 18px;
+}
+.boot span {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Set by the inline script in index.html, before the first paint: the theme is
+   a class on <body> that only exists once the app is running, and someone who
+   chose the light theme would get a dark flash on every launch without this. */
+html.boot-light .boot {
+  background: #f7f6f3;
+}
+html.boot-light .boot span {
+  color: #17181c;
+}

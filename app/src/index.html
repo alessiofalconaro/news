@@ -26,8 +26,22 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // Before the first paint, or someone who chose the light theme gets a
+      // dark flash on every launch. Same key the theme service writes.
+      try {
+        if (localStorage.getItem('theme') === 'light') {
+          document.documentElement.classList.add('boot-light');
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
-    <app-root></app-root>
+    <app-root>
+      <div class="boot">
+        <img src="icons/icon-192.png" alt="" width="76" height="76" />
+        <span>NewsDigest</span>
+      </div>
+    </app-root>
   </body>
 </html>

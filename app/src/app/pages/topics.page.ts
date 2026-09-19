@@ -50,7 +50,7 @@ function emptyDraft(): Draft {
           <p class="order-hint">{{ t().topics.orderHint }}</p>
         }
       </div>
-      <button class="btn btn-primary" (click)="startCreate()">＋ {{ t().topics.add }}</button>
+      <button class="btn btn-primary add" (click)="startCreate()">＋ {{ t().topics.add }}</button>
     </header>
 
     @if (!topics.ready()) {
@@ -220,6 +220,14 @@ function emptyDraft(): Draft {
         margin: 4px 0 0;
         color: var(--text-soft);
         font-size: 0.82rem;
+      }
+      /* On one line, in both languages. The header is a flex row, and a flex
+         item is free to shrink below the width of its own text: "Nuovo topic"
+         and "New topic" were both being squeezed onto two lines by the column
+         of text beside them. */
+      .add {
+        flex: none;
+        white-space: nowrap;
       }
       .order-hint {
         margin: 8px 0 0;

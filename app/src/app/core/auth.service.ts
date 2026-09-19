@@ -78,20 +78,38 @@ export class AuthService {
     return signOut(auth);
   }
 
+  /**
+   * The allow list, with the previous answer used to get out of the way.
+   *
+   * The lookup is a network round trip, and putting every launch behind it made
+   * the app open on a waiting screen even for someone who has been using it for
+   * weeks. So an address that was allowed last time is let through immediately
+   * and verified behind its back; if the answer has changed, the screen changes
+   * with it a moment later. Nothing is risked by being optimistic here - this
+   * check only decides what the app shows. What actually stops anyone is
+   * `firestore.rules`, which is asked again on every single read.
+   */
   private async checkAccess(user: User | null): Promise<void> {
     const email = user?.email?.trim().toLowerCase();
     if (!email) {
       this.access.set('unknown');
       return;
     }
-    this.access.set('checking');
+
+    const known = remembered() === email;
+    this.access.set(known ? 'allowed' : 'checking');
+
     try {
-      const snapshot = await getDoc(doc(db, 'allowedEmails', email));
-      this.access.set(snapshot.exists() ? 'allowed' : 'denied');
+      const allowed = (await getDoc(doc(db, 'allowedEmails', email))).exists();
+      this.access.set(allowed ? 'allowed' : 'denied');
+      remember(allowed ? email : null);
     } catch {
-      // The rules let a signed-in account read only its own entry, so a failure
-      // here means "not on the list" just as much as a missing document does.
-      this.access.set('denied');
+      // The rules let a signed-in account read only its own entry, so a refusal
+      // means "not on the list" just as much as a missing document does. But an
+      // aeroplane looks exactly the same from here, and locking someone out of
+      // an app whose stories are already on the device would be absurd: if they
+      // got in last time, they stay in.
+      if (!known) this.access.set('denied');
     }
   }
 
@@ -110,4 +128,30 @@ export class AuthService {
 
 function errorCode(e: unknown): string {
   return (e as { code?: string })?.code ?? '';
+}
+
+/**
+ * The last address the allow list said yes to, on this device.
+ *
+ * An address and nothing else: it grants nothing on its own, and a copy of it
+ * in someone else's hands is a copy of an address they would have to be signed
+ * in as to use.
+ */
+const ALLOWED_KEY = 'newsdigest-allowed';
+
+function remembered(): string | null {
+  try {
+    return localStorage.getItem(ALLOWED_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function remember(email: string | null): void {
+  try {
+    if (email) localStorage.setItem(ALLOWED_KEY, email);
+    else localStorage.removeItem(ALLOWED_KEY);
+  } catch {
+    // Blocked storage: every launch checks afresh, which is what it did before.
+  }
 }

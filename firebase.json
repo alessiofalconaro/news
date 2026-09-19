@@ -52,7 +52,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self' https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.wikimedia.org; connect-src 'self' https://*.googleapis.com https://apis.google.com https://www.gstatic.com https://fonts.googleapis.com https://fonts.gstatic.com https://*.wikimedia.org https://*.firebaseapp.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.firebaseapp.com; worker-src 'self'; manifest-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'"
+            "value": "default-src 'self'; script-src 'self' 'sha256-QOaE4Pz2X8IiP/Jb4k2DMgl03OxRwSpwG7GjgbIqvG4=' https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.wikimedia.org; connect-src 'self' https://*.googleapis.com https://apis.google.com https://www.gstatic.com https://fonts.googleapis.com https://fonts.gstatic.com https://*.wikimedia.org https://*.firebaseapp.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.firebaseapp.com; worker-src 'self'; manifest-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'"
           }
         ]
       },

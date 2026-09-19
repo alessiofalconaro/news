@@ -31,8 +31,13 @@ const NAV = [
         </p>
       </div>
     } @else if (!auth.ready() || auth.access() === 'checking') {
-      <div class="screen muted">
-        {{ auth.ready() ? t().auth.checkingAccess : t().auth.starting }}
+      <!-- The same mark the page was already showing before Angular took over,
+           so the handover is invisible. It used to read "Avvio" and then
+           "Controllo dell'accesso": a program narrating its own steps, and two
+           of them, which made a short wait feel like a long one. -->
+      <div class="boot">
+        <img src="icons/icon-192.png" alt="" width="76" height="76" />
+        <span>{{ t().app.name }}</span>
       </div>
     } @else if (!auth.user()) {
       <div class="screen login">
