@@ -4,7 +4,7 @@ import type { Dictionary } from './it';
 export const en: Dictionary = {
   app: {
     name: 'NewsDigest',
-    tagline: 'Your news digest, every morning at 10:30.',
+    tagline: 'Your news digest, at the times you choose.',
   },
 
   nav: {
@@ -48,7 +48,16 @@ export const en: Dictionary = {
   today: {
     title: 'Today',
     notReadyTitle: 'Your digest is on its way',
-    notReadyBody: 'Today’s stories are prepared every morning around 10:30.',
+    notReadyBody: (hours: string) =>
+      hours
+        ? `Today’s stories are prepared at ${hours}, local time wherever you are.`
+        : 'Today’s stories are prepared at the times you chose in settings.',
+    noTopicsTitle: 'Start with a topic',
+    noTopicsBody:
+      'A topic is a subject you want to follow, described in your own words. Create one and your first digest is prepared right away, within half an hour — no need to wait until tomorrow morning.',
+    comingTitle: 'Preparing your digest',
+    comingBody:
+      'The stories arrive within half an hour. You can close the app: if notifications are on, I will let you know.',
     partial: (topics: string) => `Some topics could not be processed: ${topics}.`,
     noStories: 'Nothing relevant today',
     storyCount: (n: number) => (n === 1 ? '1 story' : `${n} stories`),
@@ -102,7 +111,7 @@ export const en: Dictionary = {
     activeCount: (n: number, max: number) => `${n} of ${max} active topics`,
     emptyTitle: 'No topics yet',
     emptyBody:
-      'A topic is a subject you want to follow. Create one and tomorrow morning you will find its stories here.',
+      'A topic is a subject you want to follow. Create one and your first digest is prepared right away, within half an hour.',
     createFirst: 'Create your first topic',
     limitReached: (max: number) =>
       `You have reached the maximum of ${max} active topics. Pause one to add another.`,
@@ -111,6 +120,8 @@ export const en: Dictionary = {
     nameRequired: 'Give the topic a name.',
     interestsRequired: 'Write what you care about: the selection does not work without it.',
     invalidFeed: 'One of the feeds is not a valid address (it must start with http).',
+    orderHint:
+      'Order matters: the digest follows this sequence, and the notification quotes the first story of the first topic that has any.',
     moveUp: 'Move up',
     moveDown: 'Move down',
     saveError: 'I could not save that. Please try again.',

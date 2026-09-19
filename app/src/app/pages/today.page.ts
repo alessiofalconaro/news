@@ -1,6 +1,10 @@
 import { Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { I18n } from '../i18n/i18n.service';
 import { DigestService } from '../digest/digest.service';
+import { RefreshService } from '../digest/refresh.service';
+import { ProfileService } from '../core/profile.service';
+import { TopicsService } from '../topics/topics.service';
 import { TopicSections } from '../digest/topic-sections';
 import { ViewToggle } from '../digest/view-toggle';
 import type { Story } from '../core/models';
@@ -23,7 +27,7 @@ function today(): string {
  */
 @Component({
   selector: 'app-today',
-  imports: [TopicSections, ViewToggle],
+  imports: [TopicSections, ViewToggle, RouterLink],
   template: `
     <header class="head">
       <div>
@@ -45,10 +49,26 @@ function today(): string {
     } @else if (!digests.ready()) {
       <div class="empty-state card"><p>{{ t().common.loading }}</p></div>
     } @else if (!digest()) {
-      <div class="empty-state card">
-        <h2>{{ t().today.notReadyTitle }}</h2>
-        <p>{{ t().today.notReadyBody }}</p>
-      </div>
+      <!-- Three different situations that all look like "no news". Somebody
+           just let in would otherwise meet an empty screen with no way of
+           telling a new account from a broken one. -->
+      @if (!topics.topics().length) {
+        <div class="empty-state card">
+          <h2>{{ t().today.noTopicsTitle }}</h2>
+          <p>{{ t().today.noTopicsBody }}</p>
+          <a class="btn btn-primary" routerLink="/topics">{{ t().topics.createFirst }}</a>
+        </div>
+      } @else if (refresh.pending()) {
+        <div class="empty-state card">
+          <h2>{{ t().today.comingTitle }}</h2>
+          <p>{{ t().today.comingBody }}</p>
+        </div>
+      } @else {
+        <div class="empty-state card">
+          <h2>{{ t().today.notReadyTitle }}</h2>
+          <p>{{ t().today.notReadyBody(hoursLabel()) }}</p>
+        </div>
+      }
     } @else {
       @if (digest()!.status === 'partial' && digest()!.failedTopics.length) {
         <p class="banner banner-warn">
@@ -61,7 +81,7 @@ function today(): string {
       } @else if (!stories().length) {
         <div class="empty-state card">
           <h2>{{ t().today.noStories }}</h2>
-          <p>{{ t().today.notReadyBody }}</p>
+          <p>{{ t().today.notReadyBody(hoursLabel()) }}</p>
         </div>
       } @else {
         <app-topic-sections [stories]="stories()" />
@@ -101,8 +121,18 @@ export class TodayPage implements OnDestroy {
   readonly i18n = inject(I18n);
   readonly t = this.i18n.t;
   readonly digests = inject(DigestService);
+  readonly refresh = inject(RefreshService);
+  readonly topics = inject(TopicsService);
+  private readonly profile = inject(ProfileService);
 
   readonly now = new Date();
+
+  /** The reader's own rounds, written out: "10:00 e 19:00". */
+  readonly hoursLabel = computed(() => {
+    const hours = this.profile.profile()?.digestHours ?? [];
+    const times = hours.map((h) => `${String(h).padStart(2, '0')}:00`);
+    return times.length ? times.join(this.i18n.lang() === 'en' ? ' and ' : ' e ') : '';
+  });
 
   readonly digest = computed(() => this.digests.forDate(today()));
 

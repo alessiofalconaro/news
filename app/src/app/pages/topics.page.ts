@@ -2,6 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { I18n } from '../i18n/i18n.service';
 import { TopicsService } from '../topics/topics.service';
+import { DigestService } from '../digest/digest.service';
+import { RefreshService } from '../digest/refresh.service';
 import {
   DEFAULT_STORIES,
   MAX_ACTIVE_TOPICS,
@@ -42,6 +44,11 @@ function emptyDraft(): Draft {
       <div>
         <h1>{{ t().topics.title }}</h1>
         <p class="count">{{ t().topics.activeCount(topics.activeCount(), maxActive) }}</p>
+        <!-- The order is not decoration: it decides the shape of the digest
+             and what the notification says, and nothing on screen said so. -->
+        @if (topics.topics().length > 1) {
+          <p class="order-hint">{{ t().topics.orderHint }}</p>
+        }
       </div>
       <button class="btn btn-primary" (click)="startCreate()">＋ {{ t().topics.add }}</button>
     </header>
@@ -214,6 +221,13 @@ function emptyDraft(): Draft {
         color: var(--text-soft);
         font-size: 0.82rem;
       }
+      .order-hint {
+        margin: 8px 0 0;
+        max-width: 46ch;
+        color: var(--text-dim);
+        font-size: 0.78rem;
+        line-height: 1.45;
+      }
       .list {
         list-style: none;
         margin: 0;
@@ -347,6 +361,8 @@ function emptyDraft(): Draft {
 })
 export class TopicsPage {
   readonly topics = inject(TopicsService);
+  private readonly digests = inject(DigestService);
+  private readonly refresh = inject(RefreshService);
   private readonly i18n = inject(I18n);
   readonly t = this.i18n.t;
 
@@ -445,6 +461,13 @@ export class TopicsPage {
       isActive: this.draft.isActive,
     };
 
+    // Asked before the write, because afterwards it is no longer true.
+    const isFirstEver =
+      !this.editingId() &&
+      !this.topics.topics().length &&
+      this.digests.ready() &&
+      !this.digests.digests().length;
+
     this.saving.set(true);
     this.error.set(null);
     try {
@@ -452,6 +475,15 @@ export class TopicsPage {
       if (id) await this.topics.update(id, payload);
       else await this.topics.create(payload);
       this.editing.set(false);
+
+      // Somebody who has just been let in would otherwise open Today, find
+      // nothing, and have no way of telling an empty app from a broken one -
+      // the first digest would not arrive until their chosen hour, possibly
+      // tomorrow. So their first topic asks for a digest straight away, and
+      // Today says it is coming.
+      if (isFirstEver && payload.isActive && !this.refresh.pending()) {
+        await this.refresh.request();
+      }
     } catch {
       this.error.set(labels.saveError);
     } finally {

@@ -8,7 +8,7 @@
 export const it = {
   app: {
     name: 'NewsDigest',
-    tagline: 'Il tuo digest di notizie, ogni mattina alle 10:30.',
+    tagline: 'Il tuo digest di notizie, agli orari che scegli tu.',
   },
 
   nav: {
@@ -52,7 +52,16 @@ export const it = {
   today: {
     title: 'Oggi',
     notReadyTitle: 'Il digest sta arrivando',
-    notReadyBody: 'Le notizie di oggi vengono preparate ogni mattina intorno alle 10:30.',
+    notReadyBody: (hours: string) =>
+      hours
+        ? `Le notizie di oggi vengono preparate alle ${hours}, ora locale di dove ti trovi.`
+        : 'Le notizie di oggi vengono preparate agli orari che hai scelto nelle impostazioni.',
+    noTopicsTitle: 'Comincia da un topic',
+    noTopicsBody:
+      'Un topic e’ un argomento che vuoi seguire, descritto a parole tue. Creane uno e il primo digest viene preparato subito, entro mezz’ora: non devi aspettare domattina.',
+    comingTitle: 'Sto preparando il tuo digest',
+    comingBody:
+      'Le notizie arrivano entro mezz’ora. Puoi chiudere l’app: se hai attivato le notifiche, ti avviso io.',
     partial: (topics: string) => `Alcuni topic non sono stati elaborati: ${topics}.`,
     noStories: 'Niente di rilevante oggi',
     storyCount: (n: number) => (n === 1 ? '1 notizia' : `${n} notizie`),
@@ -106,7 +115,7 @@ export const it = {
     activeCount: (n: number, max: number) => `${n} di ${max} topic attivi`,
     emptyTitle: 'Nessun topic',
     emptyBody:
-      'Un topic è un argomento che vuoi seguire. Creane uno e domattina trovi le notizie che lo riguardano.',
+      'Un topic è un argomento che vuoi seguire. Creane uno: il primo digest viene preparato subito, entro mezz’ora.',
     createFirst: 'Crea il primo topic',
     limitReached: (max: number) =>
       `Hai raggiunto il massimo di ${max} topic attivi. Mettine uno in pausa per aggiungerne un altro.`,
@@ -115,6 +124,8 @@ export const it = {
     nameRequired: 'Dai un nome al topic.',
     interestsRequired: 'Scrivi cosa ti interessa: senza questo la selezione non funziona.',
     invalidFeed: 'Uno dei feed non è un indirizzo valido (deve iniziare con http).',
+    orderHint:
+      'L’ordine conta: il digest segue questa sequenza, e la notifica riporta la prima notizia del primo topic che ne ha.',
     moveUp: 'Sposta su',
     moveDown: 'Sposta giù',
     saveError: 'Non sono riuscito a salvare. Riprova.',
