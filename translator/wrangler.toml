@@ -19,7 +19,7 @@ ALLOWED_ORIGINS = "https://newsdigest-827ac.web.app,https://newsdigest-827ac.fir
 #   npx wrangler secret put GITHUB_TOKEN
 GITHUB_OWNER = "alessiofalconaro"
 GITHUB_REPO = "news"
-GITHUB_REF = "claude/youthful-fermat-cp9sul"
+GITHUB_REF = "main"
 GITHUB_WORKFLOW = "daily-digest.yml"
 
 # L'indirizzo pubblico serve, quindi workers.dev resta acceso. Le Preview URL
