@@ -58,7 +58,11 @@ import type { Story, StorySource } from '../core/models';
          old panel was laid out against the rail and clipped by its window.
          The top layer is outside all of that. -->
     <dialog #sheet class="sheet" (click)="onBackdrop($event)">
-      <div class="panel">
+      <!-- Opening a modal moves focus to its first focusable child, which was
+           the close button: it arrived ringed in the browser's focus blue, as
+           if it had been pressed. Focus lands on the panel instead, which
+           shows nothing, and the ring comes back the moment anyone tabs. -->
+      <div class="panel" tabindex="-1" autofocus>
         <header class="sheet-head">
           <h2>{{ t().today.sourcesTitle }}</h2>
           <button class="x" (click)="closeSheet()" [attr.aria-label]="t().common.close">
@@ -199,24 +203,29 @@ import type { Story, StorySource } from '../core/models';
         text-underline-offset: 3px;
       }
 
+      /* A panel floating clear of every edge, rather than a sheet stuck to the
+         bottom: anchored down there the only way out was tapping the strip of
+         backdrop above it, and on a tall phone that is a long reach. */
       .sheet {
-        /* A sheet from the bottom on a phone: the dialog's own centring is
-           turned off here and restored on a wide screen further down. */
-        margin: 0;
-        top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        max-width: 100%;
-        max-height: 88dvh;
+        inset: 0;
+        margin: auto;
+        width: min(430px, calc(100vw - 36px));
+        max-width: calc(100vw - 36px);
+        max-height: min(70dvh, calc(100dvh - 120px));
         padding: 0;
-        border: 0;
-        border-top: 1px solid var(--border);
-        border-radius: 20px 20px 0 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         background: var(--surface);
         color: var(--text);
         overflow: hidden;
+        box-shadow: var(--shadow);
+      }
+      /* Only while open: setting display on a dialog unconditionally would
+         beat the rule that keeps a closed one hidden, and the panel would sit
+         on the page for ever. */
+      .sheet[open] {
+        display: flex;
+        flex-direction: column;
       }
       .sheet::backdrop {
         /* Written out rather than through a token: what a backdrop inherits
@@ -224,9 +233,13 @@ import type { Story, StorySource } from '../core/models';
         background: rgba(0, 0, 0, 0.55);
       }
       .panel {
-        max-height: 88dvh;
+        min-height: 0;
         overflow-y: auto;
-        padding: 18px var(--page-pad) calc(18px + var(--safe-bottom));
+        overscroll-behavior: contain;
+        padding: 16px;
+      }
+      .panel:focus {
+        outline: none;
       }
       .sheet-head {
         display: flex;
@@ -365,16 +378,6 @@ import type { Story, StorySource } from '../core/models';
         font-size: 0.82rem;
       }
 
-      @media (min-width: 900px) {
-        .sheet {
-          inset: 0;
-          margin: auto;
-          width: min(520px, 92vw);
-          height: max-content;
-          border-radius: var(--radius);
-          border: 1px solid var(--border);
-        }
-      }
 
       @media (min-width: 600px) {
         .shot {
