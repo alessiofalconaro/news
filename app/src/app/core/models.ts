@@ -54,6 +54,13 @@ export interface Profile {
   createdAt: number;
 }
 
+/** A topic's name in both languages, and whether it was translatable at all. */
+export interface TopicNames {
+  it: string;
+  en: string;
+  meaningful: boolean;
+}
+
 export interface Topic {
   id: string;
   userId: string;

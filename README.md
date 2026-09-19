@@ -499,6 +499,69 @@ non corrisponde piu' rifa' la query invece di riusare quella in cache.
 Le notizie gia' salvate non cambiano: la modifica vale da li' in avanti.
 
 
+## 17. Il traduttore dei nomi dei topic (facoltativo)
+
+I nomi dei topic li scrivi tu, e seguono la lingua dell'app come tutto il
+resto: leggendo in inglese, "Geopolitica mondiale" diventa "World geopolitics".
+A tradurli e' l'AI, e questo pone un problema: **la chiave di Gemini non puo'
+stare nell'app**, perche' tutto cio' che finisce nella pagina e' scaricabile da
+chiunque apra il sito.
+
+Senza fare niente funziona lo stesso: traduce la pipeline, alla tornata
+successiva. Se pero' vuoi che il nome sia tradotto **nel momento in cui lo
+scrivi**, serve un piccolo servizio che tenga la chiave al posto suo. Costa
+zero: il piano gratuito di Cloudflare Workers non chiede la carta di credito e
+da' centomila richieste al giorno, contro le poche che servono qui.
+
+1. Crea un account su <https://dash.cloudflare.com/sign-up>. Serve solo una
+   email, niente pagamenti.
+2. Nel terminale, una riga per volta:
+
+   ```
+   cd C:UsersalefaDesktopCoding
+ews	ranslator
+   ```
+
+   ```
+   npm install
+   ```
+
+   ```
+   npx wrangler login
+   ```
+
+   Si apre il browser: autorizza. Poi:
+
+   ```
+   npx wrangler secret put GEMINI_API_KEY
+   ```
+
+   Incolla la stessa chiave del punto 9 e premi invio. **Questa chiave resta su
+   Cloudflare**: non entra nel repository e non arriva mai al browser.
+
+   ```
+   npx wrangler deploy
+   ```
+
+3. Alla fine stampa un indirizzo del tipo
+   `https://newsdigest-translator.qualcosa.workers.dev`. Copialo.
+4. Apri `app/src/app/core/translator.config.ts` e sostituisci
+   `REPLACE_ME_TRANSLATOR_URL` con quell'indirizzo, fra apici.
+5. Ricompila e pubblica l'app (punto 8).
+
+### Chi puo' usarlo
+
+Non chiunque. Il servizio accetta solo chiamate che arrivano dall'indirizzo
+dell'app, e solo da chi e' gia' entrato: verifica il token di Firebase — firma,
+progetto, scadenza — e poi chiede a Firestore, **usando il token di chi ha
+chiamato**, se quell'indirizzo e' nella lista degli invitati. Cioe' applica la
+stessa lista del resto dell'app, senza tenerne una copia propria che un giorno
+potrebbe non corrispondere piu'.
+
+Se il servizio e' spento, irraggiungibile o dice di no, non si rompe niente:
+il nome resta come l'hai scritto e lo traduce la pipeline alla tornata dopo.
+
+
 # Le notifiche (Fase 5)
 
 Quando il digest e’ pronto arriva un avviso sul telefono, nella lingua che hai
@@ -531,11 +594,11 @@ le concede solo alle web app installate.
 2. **Impostazioni** → *Notifiche* → **Attiva le notifiche**.
 3. iOS chiede il permesso: concedilo. Compare solo se premi tu il pulsante, non
    si puo’ chiedere da soli.
-4. Premi **Mandami una notifica di prova**: deve arrivare subito.
 
-La prova verifica il permesso, il service worker e l’aspetto dell’avviso su quel
-telefono. **Non** verifica l’invio dal server: quello viaggia dalla pipeline, e a
-provarlo e’ il primo digest vero — o il pulsante *Aggiorna adesso*.
+A provare che funzionino davvero e’ il primo digest vero, o il pulsante
+*Aggiorna adesso*: non c’e’ un pulsante di prova, perche’ una notifica che
+l’app mostra a se’ stessa dimostra solo meta’ della catena — il permesso e il
+service worker — e non quella che si rompe, cioe’ l’invio dal server.
 
 L’attivazione vale **per dispositivo**: se usi l’app anche sul PC, li’ va
 attivata di nuovo.

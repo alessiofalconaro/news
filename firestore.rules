@@ -52,6 +52,17 @@ service cloud.firestore {
           || (d.chosenUrlEn is string && d.chosenUrlEn.size() > 0 && d.chosenUrlEn.size() <= 2000));
     }
 
+    // The topic's name in both languages. Written by the pipeline, and now also
+    // by the app when the translator service answers while the owner is still
+    // looking at the screen. Bounded because a name is a label: the form caps
+    // it at 80 and so does this.
+    function validTopicNames(d) {
+      return (!('nameIt' in d.keys()) || (d.nameIt is string && d.nameIt.size() <= 80))
+        && (!('nameEn' in d.keys()) || (d.nameEn is string && d.nameEn.size() <= 80))
+        && (!('nameMeaningful' in d.keys()) || d.nameMeaningful is bool)
+        && (!('nameSource' in d.keys()) || (d.nameSource is string && d.nameSource.size() <= 80));
+    }
+
     function owns(userId) {
       return signedIn() && request.auth.uid == userId;
     }
@@ -93,11 +104,13 @@ service cloud.firestore {
       allow read: if allowed() && owns(resource.data.userId);
       allow create: if allowed()
         && owns(request.resource.data.userId)
-        && validTopic(request.resource.data);
+        && validTopic(request.resource.data)
+        && validTopicNames(request.resource.data);
       allow update: if allowed()
         && owns(resource.data.userId)
         && request.resource.data.userId == resource.data.userId
-        && validTopic(request.resource.data);
+        && validTopic(request.resource.data)
+        && validTopicNames(request.resource.data);
       allow delete: if allowed() && owns(resource.data.userId);
     }
 

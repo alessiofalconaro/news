@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../core/firebase';
 import { AuthService } from '../core/auth.service';
+import { TopicTranslator } from './topic-translator.service';
 import { MAX_ACTIVE_TOPICS, Topic } from '../core/models';
 
 /**
@@ -38,6 +39,7 @@ export type TopicDraft = Omit<Topic, 'id' | 'userId' | 'createdAt' | 'updatedAt'
 @Injectable({ providedIn: 'root' })
 export class TopicsService {
   private readonly auth = inject(AuthService);
+  private readonly translator = inject(TopicTranslator);
 
   readonly topics = signal<Topic[]>([]);
   readonly ready = signal(false);
@@ -73,17 +75,47 @@ export class TopicsService {
     const uid = this.requireUid();
     const now = Date.now();
     const last = this.topics().at(-1);
-    await addDoc(collection(db, 'topics'), {
+    const created = await addDoc(collection(db, 'topics'), {
       ...draft,
       userId: uid,
       sortOrder: (last?.sortOrder ?? -1) + 1,
       createdAt: now,
       updatedAt: now,
     });
+    void this.nameInBothLanguages(created.id, draft.name);
   }
 
   async update(id: string, draft: TopicDraft): Promise<void> {
+    const before = this.topics().find((t) => t.id === id);
     await updateDoc(doc(db, 'topics', id), { ...draft, updatedAt: Date.now() });
+    if (before?.nameSource !== draft.name.trim()) {
+      void this.nameInBothLanguages(id, draft.name);
+    }
+  }
+
+  /**
+   * Fills in the topic's two names, without the owner waiting for it.
+   *
+   * Deliberately not awaited by the caller. The topic is saved and on screen
+   * the moment the write lands; the name arrives a second later and the list
+   * updates itself, because it is a live subscription. Making the save wait for
+   * a model call would trade a visible delay for a cosmetic detail.
+   *
+   * If it fails, or the service is not set up at all, nothing is said and
+   * nothing is broken: the pipeline translates the same name at the next round,
+   * and until then the app shows what was typed.
+   */
+  private async nameInBothLanguages(id: string, name: string): Promise<void> {
+    const names = await this.translator.translate(name);
+    if (!names) return;
+    await updateDoc(doc(db, 'topics', id), {
+      nameIt: names.it,
+      nameEn: names.en,
+      nameMeaningful: names.meaningful,
+      nameSource: name.trim(),
+    }).catch(() => {
+      // Same story: the pipeline will do it.
+    });
   }
 
   async remove(id: string): Promise<void> {

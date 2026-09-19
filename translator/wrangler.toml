@@ -1,0 +1,17 @@
+# Il servizio che traduce il nome di un topic mentre l'utente lo sta scrivendo.
+# Gratuito: il piano free di Cloudflare Workers non chiede carta di credito e
+# da' 100.000 richieste al giorno, contro le poche che servono qui.
+#
+# La chiave di Gemini NON sta in questo file: si carica una volta con
+#   npx wrangler secret put GEMINI_API_KEY
+# e resta da Cloudflare, mai nel repository e mai nel browser.
+
+name = "newsdigest-translator"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[vars]
+FIREBASE_PROJECT_ID = "newsdigest-827ac"
+# Chi puo' chiamare questo servizio. Solo le origini dell'app: qualunque altro
+# sito riceve 403 prima ancora che si guardi il token.
+ALLOWED_ORIGINS = "https://newsdigest-827ac.web.app,https://newsdigest-827ac.firebaseapp.com,http://localhost:4200"

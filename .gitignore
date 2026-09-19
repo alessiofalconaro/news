@@ -64,3 +64,6 @@ ui-debug.log
 
 # Output della prova a vuoto: cambia a ogni lancio, non va versionato.
 pipeline/ultimo-digest.txt
+
+# Cloudflare Worker: stato locale di wrangler, non va versionato.
+translator/.wrangler/

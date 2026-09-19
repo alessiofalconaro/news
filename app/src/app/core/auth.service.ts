@@ -73,6 +73,22 @@ export class AuthService {
     }
   }
 
+  /**
+   * A fresh ID token for the signed-in account, or null when nobody is.
+   *
+   * Used to prove who is calling the translator service. Firebase refreshes it
+   * on its own when it is close to expiring, so this is cheap to ask for.
+   */
+  async idToken(): Promise<string | null> {
+    const user = this.user();
+    if (!user) return null;
+    try {
+      return await user.getIdToken();
+    } catch {
+      return null;
+    }
+  }
+
   signOut(): Promise<void> {
     this.access.set('unknown');
     return signOut(auth);
