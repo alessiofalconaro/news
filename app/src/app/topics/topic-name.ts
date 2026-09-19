@@ -21,14 +21,22 @@ export function topicName(topic: Topic, lang: Lang): string {
 }
 
 /**
- * The same, for a story, which carries its own copy.
+ * The same, for a story: the topic it belongs to, asked first.
  *
- * Copied at the time it was written rather than read from the topic, so an
- * archived digest still reads properly after the topic has been renamed or
- * deleted: it is a record of that morning, and that morning the topic was
- * called this.
+ * A story carries its own copy of both names, written when it was saved, and
+ * for a while that copy was all this used. It made the digest lag behind the
+ * topics page by a round: rename or create a topic and its own page changed
+ * language at once, while the section headings and the chips over the stories
+ * kept the old wording until the pipeline next wrote some. They are the same
+ * topic - so ask the topic, which is where the fresh answer is.
+ *
+ * The copy on the story is the fallback, and it earns its place: once a topic
+ * is deleted there is nothing left to ask, and an archived digest still has to
+ * read properly. That is what it was for.
  */
-export function storyTopicName(story: Story, lang: Lang): string {
+export function storyTopicName(story: Story, lang: Lang, topics: readonly Topic[]): string {
+  const live = story.topicId ? topics.find((t) => t.id === story.topicId) : undefined;
+  if (live) return topicName(live, lang);
   return (lang === 'en' ? story.topicNameEn : story.topicNameIt) || story.topicName;
 }
 

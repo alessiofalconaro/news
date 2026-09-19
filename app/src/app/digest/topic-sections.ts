@@ -316,6 +316,7 @@ export class TopicSections {
   readonly groups = computed<TopicGroup[]>(() => {
     const byKey = new Map<string, TopicGroup>();
     const lang = this.i18n.lang();
+    const live = this.topics.topics();
 
     for (const story of this.stories()) {
       const key = story.topicId ?? `name:${story.topicName}`;
@@ -327,7 +328,7 @@ export class TopicSections {
           // wrote: the key is what the filter chips remember, and the colour is
           // derived from the name, so both have to survive a change of
           // language unchanged.
-          name: storyTopicName(story, lang),
+          name: storyTopicName(story, lang, live),
           color: this.colorFor(story),
           stories: [],
         };

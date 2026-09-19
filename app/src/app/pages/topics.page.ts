@@ -128,6 +128,11 @@ function emptyDraft(): Draft {
       <section class="sheet" role="dialog" aria-modal="true">
         <h2>{{ editingId() ? t().topics.editTitle : t().topics.newTitle }}</h2>
 
+        <!-- Only the fields scroll. Save and Cancel used to sit at the end of
+             them, so on a phone finishing meant scrolling to look for the way
+             out - and the way out of a form is not something to go hunting
+             for. -->
+        <div class="sheet-body">
         <div class="field">
           <label for="name">{{ t().topics.name }}</label>
           <input
@@ -193,6 +198,7 @@ function emptyDraft(): Draft {
         @if (error()) {
           <p class="banner banner-error">{{ error() }}</p>
         }
+        </div>
 
         <div class="sheet-actions">
           <button class="btn" (click)="cancel()">{{ t().common.cancel }}</button>
@@ -319,9 +325,11 @@ function emptyDraft(): Draft {
         left: 0;
         right: 0;
         bottom: 0;
+        /* Three bands: the title, the fields that scroll, the two buttons. */
+        display: flex;
+        flex-direction: column;
         max-height: 88dvh;
-        overflow-y: auto;
-        padding: 20px var(--page-pad) calc(20px + var(--safe-bottom));
+        padding: 20px var(--page-pad) calc(14px + var(--safe-bottom));
         background: var(--surface);
         border-top: 1px solid var(--border);
         border-radius: 20px 20px 0 0;
@@ -345,10 +353,21 @@ function emptyDraft(): Draft {
         font-weight: 600;
         padding: 8px 0;
       }
+      .sheet-body {
+        flex: 1;
+        /* Without this a flex child refuses to shrink past its contents, and
+           the panel grows instead of the fields scrolling. */
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
       .sheet-actions {
+        flex: none;
         display: flex;
         gap: 10px;
-        margin-top: 18px;
+        margin-top: 0;
+        padding-top: 14px;
+        border-top: 1px solid var(--border-soft);
       }
       .sheet-actions .btn {
         flex: 1;
