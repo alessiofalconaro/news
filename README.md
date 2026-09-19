@@ -650,6 +650,106 @@ Le iscrizioni che smettono di funzionare — app disinstallata, telefono
 cambiato — vengono cancellate da sole: il servizio di push risponde 404 o 410 e
 la pipeline toglie la riga.
 
+# Cosa gira dove, e quanto costa
+
+Sei servizi, tutti sul piano gratuito e nessuno con una carta di credito
+collegata. Nessuno di loro puo' mandarti un conto: quando finisce, smette.
+
+| Servizio | Che cosa fa | Limite gratuito | Quanto usiamo | Margine |
+|---|---|---|---|---|
+| **GitHub Actions** | Esegue la pipeline: legge i feed, chiede all'AI di scegliere e riassumere, scrive il digest | 2000 min/mese | **~1650** | stretto |
+| **Cloudflare Workers** | Da' la sveglia alla pipeline ogni mezz'ora, e traduce i nomi dei topic quando li scrivi | 100.000 richieste/giorno | ~50 | enorme |
+| **Gemini** (flash-lite) | Sceglie quali notizie contano, le riassume nelle due lingue, ricava le parole da cercare e traduce i nomi | a minuto e a giorno | ~24 chiamate/giorno, max 10 al minuto | enorme |
+| **Firestore** | Il database: profili, topic, digest, notizie, iscrizioni alle notifiche | 50.000 letture + 20.000 scritture/giorno | ~3.000 letture, ~200 scritture | enorme |
+| **Firebase Hosting** | Serve l'app: e' il sito che apri | 10 GB/mese di traffico | pochi MB | enorme |
+| **Firebase Auth** | L'accesso con Google e la lista degli invitati | nessun limite utile | — | — |
+| **Web Push** | Consegna le notifiche al telefono | nessun limite | — | — |
+
+## L'unico da tenere d'occhio e' GitHub
+
+Il conto e' fatto quasi tutto di attesa, non di lavoro:
+
+- **48 sveglie al giorno x 1 minuto = ~1460 al mese.** Durano 15-30 secondi, ma
+  GitHub arrotonda ogni esecuzione al minuto: e' una tassa fissa.
+- **Le tre tornate vere aggiungono ~200 al mese.** Due o tre minuti l'una, e
+  sostituiscono una sveglia invece di aggiungersi a essa.
+
+**Cosa lo farebbe sforare: altri utenti.** La pipeline serve tutti in una sola
+esecuzione, quindi una persona in piu' non aggiunge esecuzioni ma le allunga:
+circa **+200/270 minuti al mese a testa**. In tre si sfora.
+
+Se succede, la leva e' una sola e costa poco: **sveglie ogni ora invece che
+ogni mezz'ora**, cambiando `crons` in `translator/wrangler.toml`. Dimezza la
+tassa fissa a ~730 minuti e ci si sta in sei. Il prezzo e' che *Aggiorna
+adesso* puo' metterci un'ora invece di mezza.
+
+## Le due cose che si rompono in silenzio
+
+- **Il token GitHub sul Worker.** Se scade o viene revocato, le sveglie
+  smettono e il digest non arriva piu'. Si ricarica con
+  `npx wrangler secret put GITHUB_TOKEN` da `translator/`.
+- **La quota di Gemini.** Se finisce, l'esecuzione va avanti ma nel registro
+  compare "topic fallito" e l'app mostra il banner del digest parziale.
+
+# Cose da fare, non ancora fatte
+
+Idee vagliate e non implementate, in ordine di utilita'. Niente di tutto
+questo e' iniziato: sono appunti, non lavori a meta'.
+
+## 1. Cercare nell'archivio
+
+**Il problema.** Ci sono novanta giorni di digest e nessun modo di ritrovare
+una notizia che si ricorda vagamente. Oggi l'archivio si puo' solo sfogliare
+giorno per giorno, il che va bene per ieri e non serve a niente per tre
+settimane fa.
+
+**Come.** Un campo di ricerca in cima all'archivio che filtra su titolo e
+riassunto. Con qualche migliaio di notizie conviene farlo in memoria: le
+`digests` sono gia' sottoscritte, le `stories` no, quindi o si caricano quelle
+dei novanta giorni una volta sola, oppure si cerca giorno per giorno man mano.
+Firestore non ha ricerca testuale, quindi in ogni caso il confronto lo fa il
+browser.
+
+**Attenzione.** Le notizie sono scritte nelle due lingue: la ricerca deve
+guardare entrambe, o cercando in inglese non si trova quello che si e' letto in
+italiano.
+
+## 2. Avvisare quando un topic non rende
+
+**Il problema.** Se le parole chiave di un topic sono sbagliate, quel topic
+smette semplicemente di comparire. Non c'e' nessun segnale: si vede una sezione
+in meno, il che assomiglia a "oggi non e' successo niente" e non a "questo
+topic e' rotto".
+
+**Come.** La pipeline sa gia' quanti articoli ha raccolto e quanti ne ha
+scelti: basta scrivere sul topic la data dell'ultima volta che ha prodotto
+qualcosa. Se sono passati tre o quattro giorni, la pagina Topic lo dice e
+suggerisce di rivedere la descrizione, con il link per modificarla.
+
+**Attenzione.** Un topic di nicchia puo' legittimamente stare zitto per giorni.
+L'avviso deve essere un suggerimento, non un errore.
+
+## 3. Salvare una notizia
+
+**Il problema.** La pulizia cancella tutto dopo novanta giorni, compreso
+quell'articolo che si voleva tenere.
+
+**Come.** Una stellina sulla card che copia la notizia in una collezione
+`savedStories`, che la pulizia non tocca, piu' una sezione per rileggerle.
+Copiare e non marcare: la notizia originale viene cancellata comunque.
+
+## 4. Il riassunto della settimana
+
+**Il problema.** Chi apre l'app una volta a settimana si trova sette digest e
+non li legge.
+
+**Come.** Una tornata in piu' la domenica che non cerca articoli nuovi ma
+rilegge quelli della settimana e ne ricava dieci righe per topic. Costa una
+chiamata all'AI per topic e nessun feed.
+
+**Attenzione.** Serve una tornata di tipo diverso da quelle esistenti, quindi
+`completesHour` e `slot` vanno pensati per non scontrarsi con le altre.
+
 # Comandi utili
 
 Dalla cartella `app`:
