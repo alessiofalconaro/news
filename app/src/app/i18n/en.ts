@@ -58,6 +58,7 @@ export const en: Dictionary = {
     sourcesBody:
       'The outlets that covered the same event. “Read the article” opens the one the AI judged most complete; here they all are.',
     sourcesPrimary: 'Picked as the main one',
+    filterClear: 'All topics',
     layoutToList: 'Show as a list',
     layoutToCards: 'Show one at a time',
     errorTitle: 'I cannot load the digest',

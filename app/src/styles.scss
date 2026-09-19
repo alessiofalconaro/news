@@ -40,6 +40,13 @@
      14px only pushed everything down for no reason. */
   --topbar-clear: 2px;
 
+  /* The top bar's own colour. Pure black in the dark theme because that is
+     exactly what iOS paints in the status bar above it (the web app asks for
+     the black bar in index.html), so the two meet without a seam. Anything
+     lighter - the card colour it used to have - drew a band across the top of
+     the screen. */
+  --topbar-bg: #000000;
+
   --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-body:
     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
@@ -75,6 +82,13 @@ body.theme-light {
 
   --shadow: 0 8px 30px rgba(30, 25, 20, 0.08);
   --shadow-sm: 0 2px 8px rgba(30, 25, 20, 0.06);
+
+  /* The page colour, so the bar and what it sits on are one surface. The
+     status bar above stays black whatever the theme - iOS reads that choice
+     once, when the app is added to the Home Screen, and it cannot follow a
+     switch made later - so in this theme there is a seam we cannot paint over
+     without making the clock unreadable. */
+  --topbar-bg: var(--bg);
 
   color-scheme: light;
 }

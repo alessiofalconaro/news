@@ -36,16 +36,23 @@ function today(): string {
            and configure beforehand. -->
       <!-- Drawn rather than typed. As characters these two sat at different
            heights inside the button, because a glyph's position in its own em
-           box is the font's business and no amount of centring reaches it. -->
+           box is the font's business and no amount of centring reaches it.
+           Each icon shows the layout you would get, not the one you are in.
+           Neither may be three plain bars: that is a menu button everywhere
+           else on a phone, and this one opens nothing. -->
       <button class="view-toggle" (click)="viewMode.toggle()" [attr.aria-label]="layoutLabel()">
         @if (viewMode.mode() === 'list') {
+          <!-- One card at a time, with the next ones waiting at the sides. -->
           <svg viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M3 7h10M3 13h10" />
-            <path d="M11 4l3 3-3 3M11 10l3 3-3 3" />
+            <rect x="6.5" y="4" width="7" height="12" rx="1.5" />
+            <path d="M3.5 7.5v5M16.5 7.5v5" />
           </svg>
         } @else {
+          <!-- Rows, each with its picture: the list as it actually looks. -->
           <svg viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M4 6h12M4 10h12M4 14h12" />
+            <path d="M3 6h9M3 14h9" />
+            <rect x="14" y="4" width="3.5" height="3.5" rx="1" />
+            <rect x="14" y="12.5" width="3.5" height="3.5" rx="1" />
           </svg>
         }
       </button>

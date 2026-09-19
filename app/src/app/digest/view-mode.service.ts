@@ -1,4 +1,4 @@
-import { Injectable, effect, signal } from '@angular/core';
+import { Injectable, computed, effect, signal } from '@angular/core';
 
 /**
  * How the stories of a topic are laid out.
@@ -16,11 +16,24 @@ const STORAGE_KEY = 'newsdigest-view-mode';
 
 @Injectable({ providedIn: 'root' })
 export class ViewModeService {
-  readonly mode = signal<ViewMode>(read());
+  /**
+   * What the reader chose, and what comes back tomorrow.
+   *
+   * Separate from what is on screen because filtering down to a single topic
+   * overrides the layout for as long as that filter lasts: one topic has the
+   * whole page to itself, so stacking its stories is plainly better than
+   * swiping them one at a time. Overriding the stored choice instead of
+   * replacing it means the reader gets their own layout back the moment the
+   * filter widens again.
+   */
+  private readonly preferred = signal<ViewMode>(read());
+  private readonly forced = signal(false);
+
+  readonly mode = computed<ViewMode>(() => (this.forced() ? 'list' : this.preferred()));
 
   constructor() {
     effect(() => {
-      const mode = this.mode();
+      const mode = this.preferred();
       try {
         localStorage.setItem(STORAGE_KEY, mode);
       } catch {
@@ -29,12 +42,19 @@ export class ViewModeService {
     });
   }
 
-  set(mode: ViewMode): void {
-    this.mode.set(mode);
+  /** Called by the topic filter: on while exactly one topic is showing. */
+  forceList(on: boolean): void {
+    this.forced.set(on);
   }
 
+  /**
+   * The reader has the last word: pressing the switch while the filter is
+   * holding the layout down lifts the hold rather than doing nothing.
+   */
   toggle(): void {
-    this.mode.set(this.mode() === 'list' ? 'cards' : 'list');
+    const next: ViewMode = this.mode() === 'list' ? 'cards' : 'list';
+    this.forced.set(false);
+    this.preferred.set(next);
   }
 }
 

@@ -190,11 +190,12 @@ const NAV = [
         left: 0;
         right: 0;
         z-index: 70;
-        padding: calc(8px + var(--safe-top) + var(--topbar-clear, 0px)) 14px 8px;
-        background: color-mix(in srgb, var(--surface) 80%, transparent);
-        backdrop-filter: blur(16px) saturate(1.4);
-        -webkit-backdrop-filter: blur(16px) saturate(1.4);
-        border-bottom: 1px solid var(--border);
+        padding: calc(6px + var(--safe-top) + var(--topbar-clear, 0px)) 14px 6px;
+        /* Opaque and unblurred. The frosted glass was a lighter colour than
+           both the status bar above it and the page below, so it read as a
+           band laid across the top of the screen rather than as part of it. */
+        background: var(--topbar-bg);
+        border-bottom: 1px solid var(--border-soft);
       }
       .tb-title {
         min-width: 0;

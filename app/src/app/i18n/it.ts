@@ -62,6 +62,7 @@ export const it = {
     sourcesBody:
       'Le testate che hanno raccontato lo stesso fatto. «Leggi l’articolo» apre quella che l’AI ha giudicato più completa; qui ci sono tutte.',
     sourcesPrimary: 'Scelta come principale',
+    filterClear: 'Tutti i topic',
     layoutToList: 'Vedi in elenco',
     layoutToCards: 'Vedi una per volta',
     errorTitle: 'Non riesco a caricare il digest',
