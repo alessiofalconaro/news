@@ -2,6 +2,7 @@ import { Component, OnDestroy, computed, effect, inject, signal } from '@angular
 import { I18n } from '../i18n/i18n.service';
 import { DigestService } from '../digest/digest.service';
 import { TopicSections } from '../digest/topic-sections';
+import { ViewToggle } from '../digest/view-toggle';
 import type { Digest, Story } from '../core/models';
 
 /**
@@ -26,9 +27,14 @@ function parseDate(date: string): Date {
  */
 @Component({
   selector: 'app-archive',
-  imports: [TopicSections],
+  imports: [TopicSections, ViewToggle],
   template: `
-    <h1>{{ t().archive.title }}</h1>
+    <header class="head">
+      <h1>{{ t().archive.title }}</h1>
+      <!-- The same switch as on Today, on the same setting: a day opened here
+           shows its stories exactly the way that one does. -->
+      <app-view-toggle />
+    </header>
 
     @if (!digests.ready()) {
       <div class="empty-state card"><p>{{ t().common.loading }}</p></div>
@@ -69,7 +75,11 @@ function parseDate(date: string): Date {
         max-width: 720px;
         margin: 0 auto;
       }
-      h1 {
+      .head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
         margin-bottom: 20px;
       }
       .days {

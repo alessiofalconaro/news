@@ -56,30 +56,34 @@ function colorFromName(name: string): string {
   imports: [StoryCard],
   template: `
     @if (groups().length > 1) {
-      <nav class="chip-row filters">
-        @for (group of groups(); track group.key) {
-          <button
-            class="chip"
-            [class.on]="filter.has(group.key)"
-            [style.--accent]="group.color"
-            [attr.aria-pressed]="filter.has(group.key)"
-            (click)="filter.toggle(group.key)"
-          >
-            <span class="dot" [style.background]="group.color"></span>
-            {{ group.name }}
-            <span class="count">{{ group.stories.length }}</span>
-          </button>
-        }
-
+      <div class="filter-bar">
+        <!-- Outside the strip, not at the end of it: as the last chip it was
+             only reachable by scrolling the whole row across, which is a lot of
+             work for undoing something. Here it never moves. -->
         @if (filter.filtering()) {
-          <button class="chip clear" (click)="filter.clear()">
+          <button class="clear" (click)="filter.clear()" [attr.aria-label]="t().today.filterClear">
             <svg viewBox="0 0 20 20" aria-hidden="true">
               <path d="M6.5 6.5l7 7M13.5 6.5l-7 7" />
             </svg>
-            {{ t().today.filterClear }}
           </button>
         }
-      </nav>
+
+        <nav class="chip-row">
+          @for (group of groups(); track group.key) {
+            <button
+              class="chip"
+              [class.on]="filter.has(group.key)"
+              [style.--accent]="group.color"
+              [attr.aria-pressed]="filter.has(group.key)"
+              (click)="filter.toggle(group.key)"
+            >
+              <span class="dot" [style.background]="group.color"></span>
+              {{ group.name }}
+              <span class="count">{{ group.stories.length }}</span>
+            </button>
+          }
+        </nav>
+      </div>
     }
 
     @for (group of visible(); track group.key) {
@@ -128,7 +132,10 @@ function colorFromName(name: string): string {
       :host {
         display: block;
       }
-      .filters {
+      .filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         /* Stays reachable while scrolling a long digest; the top bar is 120px. */
         position: sticky;
         top: calc(56px + var(--safe-top) + var(--topbar-clear, 0px));
@@ -136,33 +143,52 @@ function colorFromName(name: string): string {
         margin-bottom: 6px;
         background: var(--bg);
       }
-      .filters .chip {
+      .filter-bar .chip-row {
+        flex: 1;
+        min-width: 0;
+        /* Only the far side bleeds now: the near side belongs to the button. */
+        margin-left: 0;
+        padding-left: 0;
+      }
+      .filter-bar .chip {
         border-color: var(--border);
       }
-      .filters .chip.on {
+      .filter-bar .chip.on {
         /* The topic's own colour rather than the brand orange: four chips lit
            up in the same orange say nothing about which topics they are. */
         background: color-mix(in srgb, var(--accent) 18%, var(--surface-2));
         border-color: var(--accent);
         color: var(--text);
       }
-      .filters .count {
+      .filter-bar .count {
         color: var(--text-dim);
         font-weight: 700;
       }
-      .filters .chip.on .count {
+      .filter-bar .chip.on .count {
         color: var(--text-soft);
       }
-      .chip.clear {
-        color: var(--text-soft);
+      .clear {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+        background: color-mix(in srgb, var(--danger) 12%, transparent);
+        color: var(--danger);
       }
-      .chip.clear svg {
-        width: 13px;
-        height: 13px;
+      .clear svg {
+        width: 14px;
+        height: 14px;
         fill: none;
         stroke: currentColor;
-        stroke-width: 1.8;
+        stroke-width: 2;
         stroke-linecap: round;
+      }
+      .clear:active {
+        background: color-mix(in srgb, var(--danger) 22%, transparent);
       }
       section {
         margin-bottom: 26px;

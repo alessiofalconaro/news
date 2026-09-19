@@ -17,7 +17,14 @@ name: Digest quotidiano
 # sul pulsante "Aggiorna adesso".
 on:
   schedule:
-    - cron: '0,30 * * * *'
+    # Non in punto e non alla mezza. Le esecuzioni programmate su GitHub sono
+    # "quando c'e' posto", non a orario, e i minuti tondi sono quelli in cui
+    # tutto il mondo ha messo i propri cron: il 19/09 la tornata delle 10:00 e'
+    # stata scritta alle 11:15, un'ora e un quarto dopo. Qui si spostano su due
+    # minuti qualsiasi, dove la coda e' piu' corta. Resta comunque un servizio
+    # senza garanzie, ed e' per questo che una tornata resta da costruire per
+    # due ore: e' quella finestra ad aver salvato il digest di quel giorno.
+    - cron: '8,38 * * * *'
   workflow_dispatch:
     inputs:
       force:

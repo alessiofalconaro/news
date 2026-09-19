@@ -56,8 +56,10 @@ export const en: Dictionary = {
     readArticle: 'Read the article',
     sourcesTitle: 'The sources for this story',
     sourcesBody:
-      'The outlets that covered the same event. “Read the article” opens the one the AI judged most complete; here they all are.',
-    sourcesPrimary: 'Picked as the main one',
+      'The outlets that covered the same event. “Read the article” opens the default one; tap “Use this” to change it, and from then on it opens that.',
+    sourcesPrimary: 'Default',
+    sourcesUse: 'Use this',
+    sourcesUseError: 'I could not save that choice.',
     filterClear: 'All topics',
     layoutToList: 'Show as a list',
     layoutToCards: 'Show one at a time',

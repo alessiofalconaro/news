@@ -1,10 +1,12 @@
 import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import {
   collection,
+  doc,
   limit,
   onSnapshot,
   orderBy,
   query,
+  updateDoc,
   where,
   type Unsubscribe,
 } from 'firebase/firestore';
@@ -107,5 +109,17 @@ export class DigestService {
       (snapshot) => onStories(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Story)),
       (e: unknown) => onError((e as { code?: string })?.code ?? 'error'),
     );
+  }
+
+  /**
+   * Points a story's "read the article" link at another of its own sources.
+   *
+   * The one exception to stories being read-only here: the pipeline decides
+   * everything about a story except which outlet you would rather read it in,
+   * and that is not something it can know. The rules let the owner change this
+   * single field and nothing else.
+   */
+  async setPrimaryUrl(storyId: string, url: string): Promise<void> {
+    await updateDoc(doc(db, 'stories', storyId), { primaryUrl: url });
   }
 }

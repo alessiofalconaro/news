@@ -1,5 +1,6 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
 import { I18n } from '../i18n/i18n.service';
+import { DigestService } from './digest.service';
 import type { Story } from '../core/models';
 
 /**
@@ -43,7 +44,7 @@ import type { Story } from '../core/models';
           {{ t().today.readArticle }} ›
         </a>
         <span class="meta">
-          <button class="sources" (click)="sheet.set(true)">
+          <button class="sources" (click)="openSheet()">
             {{ t().today.sources(story().sourceCount) }}
           </button>
           · {{ i18n.time(published()) }}
@@ -51,10 +52,22 @@ import type { Story } from '../core/models';
       </div>
     </article>
 
-    @if (sheet()) {
-      <div class="sheet-back" (click)="sheet.set(false)"></div>
-      <section class="sheet" role="dialog" aria-modal="true">
-        <h2>{{ t().today.sourcesTitle }}</h2>
+    <!-- A real dialog, opened with showModal(), because the card now lives on
+         a rail that is moved with a transform: a transformed ancestor becomes
+         the containing block for anything positioned fixed inside it, so the
+         old panel was laid out against the rail and clipped by its window.
+         The top layer is outside all of that. -->
+    <dialog #sheet class="sheet" (click)="onBackdrop($event)">
+      <div class="panel">
+        <header class="sheet-head">
+          <h2>{{ t().today.sourcesTitle }}</h2>
+          <button class="x" (click)="closeSheet()" [attr.aria-label]="t().common.close">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M6 6l8 8M14 6l-8 8" />
+            </svg>
+          </button>
+        </header>
+
         <p class="explain">{{ t().today.sourcesBody }}</p>
 
         <ul class="list">
@@ -62,17 +75,25 @@ import type { Story } from '../core/models';
             <li>
               <a [href]="source.url" target="_blank" rel="noopener">
                 <span class="name">{{ source.name }}</span>
-                @if (source.url === story().primaryUrl) {
-                  <span class="badge">{{ t().today.sourcesPrimary }}</span>
-                }
+                <span class="go" aria-hidden="true">›</span>
               </a>
+
+              @if (source.url === story().primaryUrl) {
+                <span class="badge">{{ t().today.sourcesPrimary }}</span>
+              } @else {
+                <button class="pick" [disabled]="saving()" (click)="makePrimary(source.url)">
+                  {{ t().today.sourcesUse }}
+                </button>
+              }
             </li>
           }
         </ul>
 
-        <button class="btn close" (click)="sheet.set(false)">{{ t().common.close }}</button>
-      </section>
-    }
+        @if (pickFailed()) {
+          <p class="err">{{ t().today.sourcesUseError }}</p>
+        }
+      </div>
+    </dialog>
   `,
   styles: [
     `
@@ -159,27 +180,65 @@ import type { Story } from '../core/models';
         text-underline-offset: 3px;
       }
 
-      .sheet-back {
-        position: fixed;
-        inset: 0;
-        z-index: 80;
-        background: rgba(0, 0, 0, 0.55);
-      }
       .sheet {
-        position: fixed;
-        z-index: 81;
+        /* A sheet from the bottom on a phone: the dialog's own centring is
+           turned off here and restored on a wide screen further down. */
+        margin: 0;
+        top: auto;
+        bottom: 0;
         left: 0;
         right: 0;
-        bottom: 0;
+        width: 100%;
+        max-width: 100%;
         max-height: 88dvh;
-        overflow-y: auto;
-        padding: 20px var(--page-pad) calc(20px + var(--safe-bottom));
-        background: var(--surface);
+        padding: 0;
+        border: 0;
         border-top: 1px solid var(--border);
         border-radius: 20px 20px 0 0;
+        background: var(--surface);
+        color: var(--text);
+        overflow: hidden;
+      }
+      .sheet::backdrop {
+        /* Written out rather than through a token: what a backdrop inherits
+           from is not something every engine agrees on. */
+        background: rgba(0, 0, 0, 0.55);
+      }
+      .panel {
+        max-height: 88dvh;
+        overflow-y: auto;
+        padding: 18px var(--page-pad) calc(18px + var(--safe-bottom));
+      }
+      .sheet-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 8px;
       }
       .sheet h2 {
-        margin-bottom: 8px;
+        margin: 0;
+      }
+      .x {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        margin: -6px -6px 0 0;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text-soft);
+      }
+      .x svg {
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.9;
+        stroke-linecap: round;
       }
       .explain {
         margin: 0 0 16px;
@@ -189,13 +248,20 @@ import type { Story } from '../core/models';
       }
       .list {
         list-style: none;
-        margin: 0 0 18px;
+        margin: 0;
         padding: 0;
         display: flex;
         flex-direction: column;
         gap: 8px;
       }
+      .list li {
+        display: flex;
+        align-items: stretch;
+        gap: 8px;
+      }
       .list a {
+        flex: 1;
+        min-width: 0;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -213,18 +279,53 @@ import type { Story } from '../core/models';
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
       }
-      .close {
-        width: 100%;
+      .list .go {
+        flex: none;
+        color: var(--text-dim);
+      }
+      /* Which one "Read the article" opens, and how to move it. Side by side
+         with the link rather than inside it: opening a source and adopting it
+         are two different intentions and must not share one tap target. */
+      .badge,
+      .pick {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+        border-radius: var(--radius-sm);
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-align: center;
+        white-space: nowrap;
+      }
+      .badge {
+        border: 1px solid var(--accent, var(--brand));
+        color: var(--accent, var(--brand));
+        background: color-mix(in srgb, var(--accent, var(--brand)) 12%, transparent);
+      }
+      .pick {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text-soft);
+      }
+      .pick:disabled {
+        opacity: 0.5;
+      }
+      .err {
+        margin: 12px 0 0;
+        color: var(--danger);
+        font-size: 0.82rem;
       }
 
       @media (min-width: 900px) {
         .sheet {
-          left: 50%;
-          bottom: auto;
-          top: 50%;
-          transform: translate(-50%, -50%);
+          inset: 0;
+          margin: auto;
           width: min(520px, 92vw);
+          height: max-content;
           border-radius: var(--radius);
           border: 1px solid var(--border);
         }
@@ -249,8 +350,49 @@ export class StoryCard {
   readonly story = input.required<Story>();
   readonly accent = input<string>('');
 
-  /** The sources sheet, opened from the count in the footer. */
-  readonly sheet = signal(false);
+  private readonly digests = inject(DigestService);
+
+  private readonly sheet = viewChild<ElementRef<HTMLDialogElement>>('sheet');
+
+  readonly saving = signal(false);
+  readonly pickFailed = signal(false);
+
+  openSheet(): void {
+    this.pickFailed.set(false);
+    this.sheet()?.nativeElement.showModal();
+  }
+
+  closeSheet(): void {
+    this.sheet()?.nativeElement.close();
+  }
+
+  /**
+   * Tapping outside closes it. A click on the backdrop is reported against the
+   * dialog itself, so anything landing on the panel inside is somebody else's.
+   */
+  onBackdrop(event: MouseEvent): void {
+    if (event.target === this.sheet()?.nativeElement) this.closeSheet();
+  }
+
+  /**
+   * Moves "Read the article" onto another of the story's outlets.
+   *
+   * The AI picks the one it judged most complete, which is a guess about a
+   * reader it has never met: someone who cannot open one paper, or simply
+   * prefers another, should be able to say so. Written to the story itself, so
+   * the choice is there on every device and stays with the archived digest.
+   */
+  async makePrimary(url: string): Promise<void> {
+    this.saving.set(true);
+    this.pickFailed.set(false);
+    try {
+      await this.digests.setPrimaryUrl(this.story().id, url);
+    } catch {
+      this.pickFailed.set(true);
+    } finally {
+      this.saving.set(false);
+    }
+  }
 
   /** A Wikipedia URL can rot; a broken image icon is worse than no image. */
   readonly imageFailed = signal(false);
