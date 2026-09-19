@@ -15,9 +15,22 @@ FIREBASE_PROJECT_ID = "newsdigest-827ac"
 # Chi puo' chiamare questo servizio. Solo le origini dell'app: qualunque altro
 # sito riceve 403 prima ancora che si guardi il token.
 ALLOWED_ORIGINS = "https://newsdigest-827ac.web.app,https://newsdigest-827ac.firebaseapp.com,http://localhost:4200"
+# Quale workflow svegliare. Il token NON sta qui: si carica con
+#   npx wrangler secret put GITHUB_TOKEN
+GITHUB_OWNER = "alessiofalconaro"
+GITHUB_REPO = "news"
+GITHUB_REF = "claude/youthful-fermat-cp9sul"
+GITHUB_WORKFLOW = "daily-digest.yml"
 
 # L'indirizzo pubblico serve, quindi workers.dev resta acceso. Le Preview URL
 # no: sono altri nomi host che servono lo stesso codice, e per un servizio con
 # un solo chiamante sono superficie in piu' e niente altro.
 workers_dev = true
 preview_urls = false
+
+# La sveglia del digest. Ogni mezz'ora, e non e' un numero a caso: GitHub
+# fattura ogni esecuzione arrotondata al minuto, quindi 48 sveglie al giorno
+# costano circa 1460 dei 2000 minuti gratuiti, e le costruzioni vere altri 270.
+# Ogni venti minuti non ci starebbe.
+[triggers]
+crons = ["*/30 * * * *"]

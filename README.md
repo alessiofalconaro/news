@@ -549,6 +549,46 @@ ews	ranslator
    `REPLACE_ME_TRANSLATOR_URL` con quell'indirizzo, fra apici.
 5. Ricompila e pubblica l'app (punto 8).
 
+### 18. La sveglia del digest
+
+Lo stesso servizio tiene anche l'orologio. Non per gusto di accentrare: le
+esecuzioni programmate di GitHub sono capacita' libera offerta quando ce n'e',
+non un orario. Il 19/09, contro un cron che ne chiedeva quarantotto al giorno,
+ne sono arrivate **quattro** - 00:44, 06:53, 11:14, 15:58 - e la tornata delle
+10:00 e' stata costruita alle 11:14 perche' in mezzo non era girato niente.
+
+Il cron di Cloudflare invece e' un orologio. Sveglia il workflow ogni mezz'ora,
+e GitHub fa il lavoro.
+
+1. Crea un token su
+   <https://github.com/settings/personal-access-tokens/new>:
+   - **Token name**: `newsdigest-sveglia`
+   - **Expiration**: la piu' lunga che ti offre
+   - **Repository access** → *Only select repositories* → `news`
+   - **Permissions** → *Repository permissions* → **Actions** → `Read and write`
+   - **Generate token**, e copialo: si vede solo adesso.
+2. Caricalo sul Worker, **dal terminale vero** perche' chiede di incollare:
+
+   ```
+   cd C:UsersalefaDesktopCoding
+ews	ranslator
+   npx wrangler secret put GITHUB_TOKEN
+   ```
+
+3. `npx wrangler deploy`.
+
+Quel token puo' avviare i workflow di quel solo repository e niente altro, e
+non esce mai da Cloudflare.
+
+**Ogni mezz'ora non e' un numero a caso**: GitHub fattura ogni esecuzione
+arrotondata al minuto, quindi 48 sveglie al giorno costano circa 1460 dei 2000
+minuti gratuiti, e le costruzioni vere altri 270. Ogni venti minuti non ci
+starebbe.
+
+Se un giorno Cloudflare sparisse, il digest smetterebbe di partire da solo: il
+segnale che qualcosa non va e' che smette di arrivare. Il pulsante *Run
+workflow* su GitHub resta sempre disponibile.
+
 ### Chi puo' usarlo
 
 Non chiunque. Il servizio accetta solo chiamate che arrivano dall'indirizzo

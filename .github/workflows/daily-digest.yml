@@ -15,16 +15,17 @@ name: Digest quotidiano
 # piano gratuito per i repository privati. Se un giorno diventasse stretto,
 # passare a ogni ora dimezza il conto e costa solo mezz'ora di attesa in piu'
 # sul pulsante "Aggiorna adesso".
+# Niente `schedule:` qui. Le esecuzioni programmate di GitHub sono capacita'
+# libera offerta quando ce n'e', non un orologio: contro un cron che ne chiedeva
+# quarantotto al giorno, il 19/09 ne sono arrivate quattro - 00:44, 06:53,
+# 11:14, 15:58 - con ritardi dai sei ai venti minuti. La tornata delle 10:00 e'
+# stata costruita alle 11:14 perche' in mezzo non era girato niente.
+#
+# La sveglia ora la da' il cron di Cloudflare, in `translator/wrangler.toml`,
+# che chiama `workflow_dispatch` qui sotto ogni mezz'ora. Quello e' un orologio.
+# Se un giorno Cloudflare sparisse, il digest smetterebbe di partire da solo:
+# il segnale che qualcosa non va e' che smette di arrivare.
 on:
-  schedule:
-    # Non in punto e non alla mezza. Le esecuzioni programmate su GitHub sono
-    # "quando c'e' posto", non a orario, e i minuti tondi sono quelli in cui
-    # tutto il mondo ha messo i propri cron: il 19/09 la tornata delle 10:00 e'
-    # stata scritta alle 11:15, un'ora e un quarto dopo. Qui si spostano su due
-    # minuti qualsiasi, dove la coda e' piu' corta. Resta comunque un servizio
-    # senza garanzie, ed e' per questo che una tornata resta da costruire per
-    # due ore: e' quella finestra ad aver salvato il digest di quel giorno.
-    - cron: '8,38 * * * *'
   workflow_dispatch:
     inputs:
       force:

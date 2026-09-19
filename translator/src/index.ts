@@ -25,6 +25,13 @@ interface Env {
   FIREBASE_PROJECT_ID: string;
   /** Comma-separated origins allowed to call this. The app, and nothing else. */
   ALLOWED_ORIGINS: string;
+
+  /** The wake-up call: which workflow to start, and the token to start it. */
+  GITHUB_TOKEN: string;
+  GITHUB_OWNER: string;
+  GITHUB_REPO: string;
+  GITHUB_REF: string;
+  GITHUB_WORKFLOW: string;
 }
 
 const MODEL = 'gemini-3.5-flash-lite';
@@ -36,6 +43,52 @@ const JWKS_URL =
   'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
 
 export default {
+  /**
+   * The wake-up call for the digest.
+   *
+   * GitHub's own scheduler turned out not to be one. Against a cron asking for
+   * forty-eight runs a day it granted four - 00:44, 06:53, 11:14, 15:58 - with
+   * delays of six to twenty minutes, which is documented behaviour for a
+   * private repository on the free plan and quite reasonable of them: it is
+   * free capacity offered when there is some. It is simply not a clock, and
+   * the app was treating it as one. A round due at ten was built at a quarter
+   * past eleven because nothing ran in between.
+   *
+   * Cloudflare's cron is a clock, so it holds the schedule and GitHub does the
+   * work. Half-hourly, which is not an arbitrary choice: GitHub bills each run
+   * rounded up to the minute, so forty-eight wake-ups a day cost about 1460 of
+   * the 2000 free minutes, and the real builds another 270 or so. Every twenty
+   * minutes would not fit.
+   */
+  async scheduled(_event: ScheduledController, env: Env): Promise<void> {
+    const url =
+      `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}` +
+      `/actions/workflows/${env.GITHUB_WORKFLOW}/dispatches`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${env.GITHUB_TOKEN}`,
+        accept: 'application/vnd.github+json',
+        'x-github-api-version': '2022-11-28',
+        // GitHub refuses a request without one.
+        'user-agent': 'newsdigest-translator',
+        'content-type': 'application/json',
+      },
+      // No `force`: this is the ordinary wake-up, and the pipeline decides on
+      // its own whether anybody has a round due. Forcing would rebuild every
+      // account's digest every half hour.
+      body: JSON.stringify({ ref: env.GITHUB_REF }),
+    });
+
+    if (!response.ok) {
+      // Written to the Worker's log, where `wrangler tail` can see it. Nothing
+      // to retry: another wake-up is half an hour away, and the round it would
+      // have built stays due for two hours.
+      console.log(`sveglia non riuscita: ${response.status} ${await response.text()}`);
+    }
+  },
+
   async fetch(request: Request, env: Env): Promise<Response> {
     const origin = request.headers.get('Origin') ?? '';
     const allowed = env.ALLOWED_ORIGINS.split(',').map((o) => o.trim());
