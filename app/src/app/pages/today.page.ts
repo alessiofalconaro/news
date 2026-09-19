@@ -34,8 +34,20 @@ function today(): string {
       <!-- The layout switch lives here rather than in settings: it is something
            you change while reading, looking at the result, not something you go
            and configure beforehand. -->
-      <button class="layout" (click)="viewMode.toggle()" [attr.aria-label]="layoutLabel()">
-        {{ viewMode.mode() === 'list' ? '⇆' : '☰' }}
+      <!-- Drawn rather than typed. As characters these two sat at different
+           heights inside the button, because a glyph's position in its own em
+           box is the font's business and no amount of centring reaches it. -->
+      <button class="view-toggle" (click)="viewMode.toggle()" [attr.aria-label]="layoutLabel()">
+        @if (viewMode.mode() === 'list') {
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M3 7h10M3 13h10" />
+            <path d="M11 4l3 3-3 3M11 10l3 3-3 3" />
+          </svg>
+        } @else {
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M4 6h12M4 10h12M4 14h12" />
+          </svg>
+        }
       </button>
     </header>
 
@@ -83,10 +95,8 @@ function today(): string {
         justify-content: space-between;
         gap: 12px;
       }
-      .layout {
+      .view-toggle {
         flex: none;
-        /* Centred by the box, not by the text baseline: these glyphs sit low
-           in their em box and line-height alone left them below centre. */
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -97,10 +107,19 @@ function today(): string {
         border: 1px solid var(--border);
         background: var(--surface);
         color: var(--text-soft);
-        font-size: 1.05rem;
-        line-height: 1;
       }
-      .layout:active {
+      .view-toggle svg {
+        width: 20px;
+        height: 20px;
+        /* The box is the icon: stroked, never filled, so it stays crisp and
+           follows the button colour. */
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .view-toggle:active {
         background: var(--surface-2);
       }
       .date {
