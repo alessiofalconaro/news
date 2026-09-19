@@ -54,10 +54,10 @@ export const en: Dictionary = {
         : 'Today’s stories are prepared at the times you chose in settings.',
     noTopicsTitle: 'Start with a topic',
     noTopicsBody:
-      'A topic is a subject you want to follow, described in your own words. Create one and your first digest is prepared right away, within half an hour — no need to wait until tomorrow morning.',
+      'A topic is a subject you want to follow, described in your own words. Create one and your first digest is prepared right away, usually within half an hour — no need to wait until tomorrow morning.',
     comingTitle: 'Preparing your digest',
     comingBody:
-      'The stories arrive within half an hour. You can close the app: if notifications are on, I will let you know.',
+      'The stories usually arrive within half an hour, sometimes later. You can close the app: if notifications are on, I will let you know.',
     partial: (topics: string) => `Some topics could not be processed: ${topics}.`,
     noStories: 'Nothing relevant today',
     storyCount: (n: number) => (n === 1 ? '1 story' : `${n} stories`),
@@ -111,7 +111,7 @@ export const en: Dictionary = {
     activeCount: (n: number, max: number) => `${n} of ${max} active topics`,
     emptyTitle: 'No topics yet',
     emptyBody:
-      'A topic is a subject you want to follow. Create one and your first digest is prepared right away, within half an hour.',
+      'A topic is a subject you want to follow. Create one and your first digest is prepared right away, usually within half an hour.',
     createFirst: 'Create your first topic',
     limitReached: (max: number) =>
       `You have reached the maximum of ${max} active topics. Pause one to add another.`,
@@ -120,6 +120,8 @@ export const en: Dictionary = {
     nameRequired: 'Give the topic a name.',
     interestsRequired: 'Write what you care about: the selection does not work without it.',
     invalidFeed: 'One of the feeds is not a valid address (it must start with http).',
+    notTranslated: (names: string) =>
+      `I could not translate these names, so they stay as you wrote them: ${names}. That happens when the text is not a word in any language.`,
     orderHint:
       'Order matters: the digest follows this sequence, and the notification quotes the first story of the first topic that has any.',
     moveUp: 'Move up',
@@ -141,7 +143,7 @@ export const en: Dictionary = {
     digestNone: 'None',
     refresh: 'Refresh now',
     refreshHint:
-      'Asks for the news outside the schedule. Not instant: the digest is built within half an hour.',
+      'Asks for the news outside the schedule. Not instant: the digest is usually built within half an hour, sometimes later.',
     refreshPending: 'Request in progress…',
     refreshWhen: (time: string) => ` The stories arrive around ${time}.`,
     refreshReplaces: (hour: string) =>
@@ -156,9 +158,6 @@ export const en: Dictionary = {
     notificationsOn: 'On for this device',
     notificationsEnable: 'Turn notifications on',
     notificationsDisable: 'Turn off',
-    notificationsTest: 'Send me a test notification',
-    notificationsTestTitle: 'NewsDigest',
-    notificationsTestBody: 'If you can read this, notifications work.',
     notificationsDenied:
       'You refused them. To allow again: iOS Settings → NewsDigest → Notifications.',
     notificationsUnsupported:

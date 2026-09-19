@@ -27,6 +27,7 @@ import {
 } from './firestore.ts';
 import { collectArticles } from './feeds.ts';
 import { resolveQuery } from './query.ts';
+import { resolveNames } from './topic-name.ts';
 import { dropDuplicates } from './dedupe.ts';
 import { selectStories } from './select.ts';
 import { writeStories } from './summarize.ts';
@@ -165,6 +166,10 @@ async function runProfile(profile: Profile, options: Options): Promise<number> {
 
   for (const topic of topics) {
     try {
+      // Before the stories, so the names they are filed under are already in
+      // both languages by the time they are written down. Costs a model call
+      // only the first time a name is seen, or after the owner edits it.
+      await resolveNames(topic);
       results.push(await runTopic(topic));
     } catch (error) {
       // PROJECT_SPEC section 6: one topic failing must never cost the others.

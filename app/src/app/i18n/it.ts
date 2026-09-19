@@ -58,10 +58,10 @@ export const it = {
         : 'Le notizie di oggi vengono preparate agli orari che hai scelto nelle impostazioni.',
     noTopicsTitle: 'Comincia da un topic',
     noTopicsBody:
-      'Un topic e’ un argomento che vuoi seguire, descritto a parole tue. Creane uno e il primo digest viene preparato subito, entro mezz’ora: non devi aspettare domattina.',
+      'Un topic e’ un argomento che vuoi seguire, descritto a parole tue. Creane uno e il primo digest viene preparato subito, di solito entro mezz’ora: non devi aspettare domattina.',
     comingTitle: 'Sto preparando il tuo digest',
     comingBody:
-      'Le notizie arrivano entro mezz’ora. Puoi chiudere l’app: se hai attivato le notifiche, ti avviso io.',
+      'Le notizie arrivano di solito entro mezz’ora, a volte piu’ tardi. Puoi chiudere l’app: se hai attivato le notifiche, ti avviso io.',
     partial: (topics: string) => `Alcuni topic non sono stati elaborati: ${topics}.`,
     noStories: 'Niente di rilevante oggi',
     storyCount: (n: number) => (n === 1 ? '1 notizia' : `${n} notizie`),
@@ -115,7 +115,7 @@ export const it = {
     activeCount: (n: number, max: number) => `${n} di ${max} topic attivi`,
     emptyTitle: 'Nessun topic',
     emptyBody:
-      'Un topic è un argomento che vuoi seguire. Creane uno: il primo digest viene preparato subito, entro mezz’ora.',
+      'Un topic è un argomento che vuoi seguire. Creane uno: il primo digest viene preparato subito, di solito entro mezz’ora.',
     createFirst: 'Crea il primo topic',
     limitReached: (max: number) =>
       `Hai raggiunto il massimo di ${max} topic attivi. Mettine uno in pausa per aggiungerne un altro.`,
@@ -124,6 +124,8 @@ export const it = {
     nameRequired: 'Dai un nome al topic.',
     interestsRequired: 'Scrivi cosa ti interessa: senza questo la selezione non funziona.',
     invalidFeed: 'Uno dei feed non è un indirizzo valido (deve iniziare con http).',
+    notTranslated: (names: string) =>
+      `Questi nomi non li ho saputi tradurre e restano come li hai scritti: ${names}. Succede quando il testo non e’ una parola in nessuna lingua.`,
     orderHint:
       'L’ordine conta: il digest segue questa sequenza, e la notifica riporta la prima notizia del primo topic che ne ha.',
     moveUp: 'Sposta su',
@@ -145,7 +147,7 @@ export const it = {
     digestNone: 'Nessuna',
     refresh: 'Aggiorna adesso',
     refreshHint:
-      'Chiede le notizie fuori orario. Non e’ immediato: il digest viene preparato entro mezz’ora.',
+      'Chiede le notizie fuori orario. Non e’ immediato: il digest viene preparato di solito entro mezz’ora, a volte piu’ tardi.',
     refreshPending: 'Richiesta in corso…',
     refreshWhen: (time: string) => ` Le notizie arrivano verso le ${time}.`,
     refreshReplaces: (hour: string) =>
@@ -160,9 +162,6 @@ export const it = {
     notificationsOn: 'Attive su questo dispositivo',
     notificationsEnable: 'Attiva le notifiche',
     notificationsDisable: 'Disattiva',
-    notificationsTest: 'Mandami una notifica di prova',
-    notificationsTestTitle: 'NewsDigest',
-    notificationsTestBody: 'Se leggi questo, le notifiche funzionano.',
     notificationsDenied:
       'Le hai rifiutate. Per riattivarle: Impostazioni di iOS → NewsDigest → Notifiche.',
     notificationsUnsupported:

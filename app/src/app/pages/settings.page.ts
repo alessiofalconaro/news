@@ -91,9 +91,6 @@ import { LangToggle } from '../lang-toggle';
         @case ('on') {
           <p class="on">✓ {{ t().settings.notificationsOn }}</p>
           <div class="buttons">
-            <button class="btn" [disabled]="push.busy()" (click)="testNotification()">
-              {{ t().settings.notificationsTest }}
-            </button>
             <button class="btn btn-ghost" [disabled]="push.busy()" (click)="push.disable()">
               {{ t().settings.notificationsDisable }}
             </button>
@@ -242,13 +239,6 @@ export class SettingsPage implements OnDestroy {
     // saying which minute is still better than leaving it to be discovered.
     return what + t.refreshWhen(this.i18n.time(nextWakeUp(at)));
   });
-
-  testNotification(): void {
-    void this.push.showTest(
-      this.t().settings.notificationsTestTitle,
-      this.t().settings.notificationsTestBody,
-    );
-  }
 
   ngOnDestroy(): void {
     clearInterval(this.clock);

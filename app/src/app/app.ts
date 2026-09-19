@@ -8,6 +8,7 @@ import { Updates } from './core/updates.service';
 import { I18n } from './i18n/i18n.service';
 import { firebaseConfigured } from './core/firebase.config';
 import { LangToggle } from './lang-toggle';
+import { UntranslatedBanner } from './topics/untranslated-banner';
 
 /** Bottom navigation, in order. Icons are plain emoji, as in both reference apps. */
 const NAV = [
@@ -19,7 +20,7 @@ const NAV = [
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LangToggle],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LangToggle, UntranslatedBanner],
   template: `
     @if (!configured) {
       <div class="screen">
@@ -95,6 +96,10 @@ const NAV = [
         </aside>
 
         <main class="main">
+          <!-- In the shell rather than on a page: it answers a question raised
+               by the language toggle in the bar above, wherever the reader
+               happens to be standing when they press it. -->
+          <app-untranslated-banner />
           <router-outlet />
         </main>
 

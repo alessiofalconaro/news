@@ -14,7 +14,7 @@ import type { ServiceAccount } from 'firebase-admin/app';
 import { SEEN_ARTICLE_DAYS } from './config.ts';
 import { seenKey } from './dedupe.ts';
 import { daysAgo, safeZone } from './time.ts';
-import type { Article, Profile, Topic } from './types.ts';
+import type { Article, Profile, Topic, TopicNames } from './types.ts';
 
 /**
  * One or two hours, sane and sorted. A profile written before this setting
@@ -112,6 +112,10 @@ export async function activeTopics(userId: string): Promise<Topic[]> {
         sortOrder: Number(d['sortOrder'] ?? 0),
         autoQuery: typeof d['autoQuery'] === 'string' ? d['autoQuery'] : undefined,
         autoQueryFor: typeof d['autoQueryFor'] === 'string' ? d['autoQueryFor'] : undefined,
+        nameIt: typeof d['nameIt'] === 'string' ? d['nameIt'] : undefined,
+        nameEn: typeof d['nameEn'] === 'string' ? d['nameEn'] : undefined,
+        nameMeaningful: typeof d['nameMeaningful'] === 'boolean' ? d['nameMeaningful'] : undefined,
+        nameSource: typeof d['nameSource'] === 'string' ? d['nameSource'] : undefined,
       } satisfies Topic;
     })
     .sort((a, b) => a.sortOrder - b.sortOrder);
@@ -158,6 +162,26 @@ export async function saveAutoQuery(topicId: string, query: string, mark: string
     .collection('topics')
     .doc(topicId)
     .set({ autoQuery: query, autoQueryFor: mark }, { merge: true });
+}
+
+/** The topic's name in both languages, alongside the name they came from. */
+export async function saveTopicNames(
+  topicId: string,
+  names: TopicNames,
+  source: string,
+): Promise<void> {
+  await database()
+    .collection('topics')
+    .doc(topicId)
+    .set(
+      {
+        nameIt: names.it,
+        nameEn: names.en,
+        nameMeaningful: names.meaningful,
+        nameSource: source,
+      },
+      { merge: true },
+    );
 }
 
 /**

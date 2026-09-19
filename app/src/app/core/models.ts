@@ -63,6 +63,16 @@ export interface Topic {
   /** Empty means: use `name` as the query. */
   searchQuery: string;
   sourceLanguage: SourceLanguage;
+  /**
+   * The name in each language, written by the pipeline, and the name they were
+   * made from. When `nameSource` no longer matches `name` the owner has edited
+   * it since and the app shows exactly what they typed, until the next round.
+   */
+  nameIt?: string;
+  nameEn?: string;
+  /** False when the name is not a word in any language, so it was left alone. */
+  nameMeaningful?: boolean;
+  nameSource?: string;
   extraFeeds: string[];
   maxStories: number;
   isActive: boolean;
@@ -102,6 +112,9 @@ export interface Story {
   /** Null once the topic is deleted; `topicName` keeps the archive readable. */
   topicId: string | null;
   topicName: string;
+  /** The same name in each language; absent on stories built before this. */
+  topicNameIt?: string;
+  topicNameEn?: string;
   rank: number;
   /** The slot that produced this story, so a rerun replaces only its own. */
   slot: number;

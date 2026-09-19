@@ -26,6 +26,12 @@ export interface Topic {
   interests: string;
   searchQuery: string;
   sourceLanguage: SourceLanguage;
+  /** The name in each language, and the name they were made from. */
+  nameIt?: string;
+  nameEn?: string;
+  /** False when the name is not a word in any language, so it was left alone. */
+  nameMeaningful?: boolean;
+  nameSource?: string;
   extraFeeds: string[];
   maxStories: number;
   isActive: boolean;
@@ -53,6 +59,13 @@ export interface Article {
   lang: 'it' | 'en' | null;
   /** Which feed it came from, for the dry run's own accounting. */
   feed: string;
+}
+
+/** A topic's name in both languages, and whether it was translatable at all. */
+export interface TopicNames {
+  it: string;
+  en: string;
+  meaningful: boolean;
 }
 
 /** One feed to read, and the language whatever it produces is written in. */

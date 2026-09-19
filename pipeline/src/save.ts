@@ -115,8 +115,11 @@ export async function saveDigest(input: SaveInput): Promise<{ id: string; storie
         digestId: id,
         userId: input.userId,
         topicId: result.topic.id,
-        // Copied, so the archive stays readable after the topic is deleted.
+        // Copied, so the archive stays readable after the topic is deleted -
+        // in whichever language it is read in, which is why all three travel.
         topicName: result.topic.name,
+        topicNameIt: result.topic.nameIt ?? result.topic.name,
+        topicNameEn: result.topic.nameEn ?? result.topic.name,
         rank,
         slot: input.slot,
         headlineIt: story.headlineIt,

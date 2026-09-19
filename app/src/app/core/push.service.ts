@@ -81,23 +81,6 @@ export class PushService {
     }
   }
 
-  /**
-   * A notification shown by the service worker itself, right now.
-   *
-   * It proves the permission, the worker and the way the notification looks on
-   * this device. It does not prove the sending side: that one travels from the
-   * pipeline, and the first real digest is what tests it.
-   */
-  async showTest(title: string, body: string): Promise<void> {
-    const registration = await navigator.serviceWorker.getRegistration();
-    await registration?.showNotification(title, {
-      body,
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
-      data: { onActionClick: { default: { operation: 'navigateLastFocusedOrOpen', url: '/' } } },
-    });
-  }
-
   /** Read from the browser rather than from an observable: one await, no stream. */
   private async current(): Promise<PushSubscription | null> {
     const registration = await navigator.serviceWorker.getRegistration();

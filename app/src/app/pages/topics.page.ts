@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { I18n } from '../i18n/i18n.service';
 import { TopicsService } from '../topics/topics.service';
+import { topicName } from '../topics/topic-name';
 import { DigestService } from '../digest/digest.service';
 import { RefreshService } from '../digest/refresh.service';
 import {
@@ -76,7 +77,7 @@ function emptyDraft(): Draft {
           <li class="card topic" [class.paused]="!topic.isActive">
             <div class="top">
               <span class="dot" [style.background]="topics.colorOf(topic)"></span>
-              <span class="name">{{ topic.name }}</span>
+              <span class="name">{{ shownName(topic) }}</span>
               <span class="badge">{{ topic.maxStories }}</span>
             </div>
             <p class="interests">{{ topic.interests }}</p>
@@ -429,8 +430,17 @@ export class TopicsPage {
     await this.topics.setActive(topic, !topic.isActive);
   }
 
+  /**
+   * The name as the page shows it: translated where there is a translation,
+   * and exactly what was typed otherwise. The form still edits `topic.name`,
+   * because that is the one the owner owns.
+   */
+  shownName(topic: Topic): string {
+    return topicName(topic, this.i18n.lang());
+  }
+
   async remove(topic: Topic): Promise<void> {
-    if (!confirm(this.t().topics.deleteConfirm(topic.name))) return;
+    if (!confirm(this.t().topics.deleteConfirm(this.shownName(topic)))) return;
     await this.topics.remove(topic.id);
   }
 

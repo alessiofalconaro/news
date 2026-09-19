@@ -13,6 +13,7 @@ import { TOPIC_COLORS, TopicsService } from '../topics/topics.service';
 import { StoryCard } from './story-card';
 import { TopicFilterService } from './topic-filter.service';
 import { ViewModeService } from './view-mode.service';
+import { storyTopicName } from '../topics/topic-name';
 import type { Story } from '../core/models';
 
 interface TopicGroup {
@@ -314,6 +315,7 @@ export class TopicSections {
    */
   readonly groups = computed<TopicGroup[]>(() => {
     const byKey = new Map<string, TopicGroup>();
+    const lang = this.i18n.lang();
 
     for (const story of this.stories()) {
       const key = story.topicId ?? `name:${story.topicName}`;
@@ -321,7 +323,11 @@ export class TopicSections {
       if (!group) {
         group = {
           key,
-          name: story.topicName,
+          // Shown translated, but keyed and coloured by the name the pipeline
+          // wrote: the key is what the filter chips remember, and the colour is
+          // derived from the name, so both have to survive a change of
+          // language unchanged.
+          name: storyTopicName(story, lang),
           color: this.colorFor(story),
           stories: [],
         };
