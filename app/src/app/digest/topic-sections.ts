@@ -1,11 +1,13 @@
 import {
   Component,
   ElementRef,
+  DestroyRef,
   afterRenderEffect,
   computed,
   inject,
   input,
   signal,
+  viewChild,
   viewChildren,
 } from '@angular/core';
 import { I18n } from '../i18n/i18n.service';
@@ -69,7 +71,23 @@ function colorFromName(name: string): string {
           </button>
         }
 
-        <nav class="chip-row">
+        <!-- Same reasoning as the stories: with more topics than fit, a finger
+             drags the strip and a cursor has nothing to drag. Shown only when
+             there is something out of sight. -->
+        @if (chips().overflow) {
+          <button
+            class="arrow flat"
+            [disabled]="chips().atStart"
+            [attr.aria-label]="t().today.moreTopicsLeft"
+            (click)="scrollChips(-1)"
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M12 4.5L6.5 10l5.5 5.5" />
+            </svg>
+          </button>
+        }
+
+        <nav #chipRow class="chip-row" (scroll)="measureChips()">
           @for (group of groups(); track group.key) {
             <button
               class="chip"
@@ -84,6 +102,19 @@ function colorFromName(name: string): string {
             </button>
           }
         </nav>
+
+        @if (chips().overflow) {
+          <button
+            class="arrow flat"
+            [disabled]="chips().atEnd"
+            [attr.aria-label]="t().today.moreTopicsRight"
+            (click)="scrollChips(1)"
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M8 4.5l5.5 5.5L8 15.5" />
+            </svg>
+          </button>
+        }
       </div>
     }
 
@@ -96,27 +127,55 @@ function colorFromName(name: string): string {
         </header>
 
         @if (mode() === 'cards') {
-          <div
-            #viewport
-            class="viewport"
-            [attr.data-key]="group.key"
-            (touchstart)="onStart(group.key, $event)"
-            (touchmove)="onMove($event)"
-            (touchend)="onEnd($event)"
-            (touchcancel)="onEnd($event)"
-          >
+          <div class="rail-wrap">
             <div
-              class="rail"
-              [class.dragging]="drag()?.key === group.key"
-              [style.--i]="indexOf(group.key)"
-              [style.--drag]="dragOf(group.key)"
+              #viewport
+              class="viewport"
+              [attr.data-key]="group.key"
+              (touchstart)="onStart(group.key, $event)"
+              (touchmove)="onMove($event)"
+              (touchend)="onEnd($event)"
+              (touchcancel)="onEnd($event)"
             >
-              @for (story of group.stories; track story.id) {
-                <div class="slide">
-                  <app-story-card [story]="story" [accent]="group.color" />
-                </div>
-              }
+              <div
+                class="rail"
+                [class.dragging]="drag()?.key === group.key"
+                [style.--i]="indexOf(group.key)"
+                [style.--drag]="dragOf(group.key)"
+              >
+                @for (story of group.stories; track story.id) {
+                  <div class="slide">
+                    <app-story-card [story]="story" [accent]="group.color" />
+                  </div>
+                }
+              </div>
             </div>
+
+            <!-- Only where there is a mouse. A finger has the gesture; a
+                 cursor has nothing to drag with, and the row looked like a
+                 dead end with the rest of the stories nowhere. -->
+            @if (group.stories.length > 1) {
+              <button
+                class="arrow prev"
+                [disabled]="indexOf(group.key) === 0"
+                [attr.aria-label]="t().today.previousStory"
+                (click)="go(group.key, -1)"
+              >
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M12 4.5L6.5 10l5.5 5.5" />
+                </svg>
+              </button>
+              <button
+                class="arrow next"
+                [disabled]="indexOf(group.key) >= group.stories.length - 1"
+                [attr.aria-label]="t().today.nextStory"
+                (click)="go(group.key, 1)"
+              >
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M8 4.5l5.5 5.5L8 15.5" />
+                </svg>
+              </button>
+            }
           </div>
         } @else {
           <div class="stories">
@@ -190,6 +249,73 @@ function colorFromName(name: string): string {
       }
       .clear:active {
         background: color-mix(in srgb, var(--danger) 22%, transparent);
+      }
+      /* Hidden by default and shown only where there is a cursor. The test is
+         the pointer, not the width of the window: a tablet held in landscape
+         is as wide as a laptop and still has the gesture, and a narrow desktop
+         window has a mouse and does not. */
+      .arrow {
+        display: none;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .arrow {
+          flex: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 34px;
+          height: 34px;
+          padding: 0;
+          border-radius: 50%;
+          border: 1px solid var(--border);
+          background: var(--surface);
+          color: var(--text-soft);
+        }
+        .arrow svg {
+          width: 16px;
+          height: 16px;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.8;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+        .arrow:hover:not(:disabled) {
+          background: var(--surface-2);
+          color: var(--text);
+        }
+        .arrow:disabled {
+          opacity: 0.32;
+          cursor: default;
+        }
+
+        /* Over the bleed the row already takes, so they sit beside the cards
+           rather than on top of them. */
+        .arrow.prev,
+        .arrow.next {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 5;
+          box-shadow: var(--shadow-sm);
+        }
+        .arrow.prev {
+          left: calc(-1 * var(--page-pad) + 4px);
+        }
+        .arrow.next {
+          right: calc(-1 * var(--page-pad) + 4px);
+        }
+
+        /* With the arrows there, the strip no longer needs to run off the edge
+           of the page: nothing is dragging it from there. */
+        .filter-bar .chip-row {
+          margin-right: 0;
+          padding-right: 0;
+        }
+      }
+
+      .rail-wrap {
+        position: relative;
       }
       section {
         margin-bottom: 26px;
@@ -289,6 +415,16 @@ export class TopicSections {
   readonly stories = input.required<Story[]>();
 
   private readonly viewports = viewChildren<ElementRef<HTMLElement>>('viewport');
+  private readonly chipRow = viewChild<ElementRef<HTMLElement>>('chipRow');
+
+  /**
+   * Whether the chip strip has anything out of sight, and which way.
+   *
+   * Drives the two arrows: they appear only when there is more than fits, and
+   * each one greys out at its own end. Measured rather than guessed, because
+   * it depends on the topic names, the window and the font.
+   */
+  protected readonly chips = signal({ overflow: false, atStart: true, atEnd: false });
 
   /** Which card each topic is showing, by topic key. */
   private readonly at = signal<Record<string, number>>({});
@@ -303,7 +439,37 @@ export class TopicSections {
       this.visible();
       this.at();
       for (const ref of this.viewports()) this.fit(ref.nativeElement);
+      this.measureChips();
     });
+
+    // A narrower window fits fewer chips and a different card, so both
+    // measurements go stale together.
+    const onResize = () => {
+      this.measureChips();
+      for (const ref of this.viewports()) this.fit(ref.nativeElement);
+    };
+    window.addEventListener('resize', onResize);
+    inject(DestroyRef).onDestroy(() => window.removeEventListener('resize', onResize));
+  }
+
+  protected measureChips(): void {
+    const el = this.chipRow()?.nativeElement;
+    if (!el) return;
+    // A pixel of slack: fractional widths make an exact comparison flicker.
+    const slack = 1;
+    this.chips.set({
+      overflow: el.scrollWidth > el.clientWidth + slack,
+      atStart: el.scrollLeft <= slack,
+      atEnd: el.scrollLeft >= el.scrollWidth - el.clientWidth - slack,
+    });
+  }
+
+  protected scrollChips(direction: -1 | 1): void {
+    const el = this.chipRow()?.nativeElement;
+    if (!el) return;
+    // Most of a screenful, so a press makes visible progress without throwing
+    // away what the reader was looking at.
+    el.scrollBy({ left: direction * Math.max(160, el.clientWidth * 0.7), behavior: 'smooth' });
   }
 
   // --- Grouping -----------------------------------------------------------
@@ -384,6 +550,13 @@ export class TopicSections {
 
   protected indexOf(key: string): number {
     return this.at()[key] ?? 0;
+  }
+
+  /** One card along, from the arrows. The row re-measures itself after. */
+  protected go(key: string, direction: -1 | 1): void {
+    const last = this.countOf(key) - 1;
+    const next = Math.max(0, Math.min(last, this.indexOf(key) + direction));
+    this.at.update((all) => ({ ...all, [key]: next }));
   }
 
   protected dragOf(key: string): string {
