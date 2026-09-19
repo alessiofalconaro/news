@@ -15,3 +15,9 @@ FIREBASE_PROJECT_ID = "newsdigest-827ac"
 # Chi puo' chiamare questo servizio. Solo le origini dell'app: qualunque altro
 # sito riceve 403 prima ancora che si guardi il token.
 ALLOWED_ORIGINS = "https://newsdigest-827ac.web.app,https://newsdigest-827ac.firebaseapp.com,http://localhost:4200"
+
+# L'indirizzo pubblico serve, quindi workers.dev resta acceso. Le Preview URL
+# no: sono altri nomi host che servono lo stesso codice, e per un servizio con
+# un solo chiamante sono superficie in piu' e niente altro.
+workers_dev = true
+preview_urls = false
