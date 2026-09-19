@@ -42,7 +42,7 @@ import { LangToggle } from '../lang-toggle';
       <div class="slots">
         <label class="slot">
           <span>{{ t().settings.digestFirst }}</span>
-          <select (change)="pickFirst($event)">
+          <select (change)="pick(0, $event)">
             @for (h of hours; track h) {
               <option [value]="h" [selected]="h === first()">{{ label(h) }}</option>
             }
@@ -51,10 +51,20 @@ import { LangToggle } from '../lang-toggle';
 
         <label class="slot">
           <span>{{ t().settings.digestSecond }}</span>
-          <select (change)="pickSecond($event)">
+          <select (change)="pick(1, $event)">
             <option value="" [selected]="second() === null">{{ t().settings.digestNone }}</option>
             @for (h of hours; track h) {
               <option [value]="h" [selected]="h === second()">{{ label(h) }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="slot">
+          <span>{{ t().settings.digestThird }}</span>
+          <select (change)="pick(2, $event)">
+            <option value="" [selected]="third() === null">{{ t().settings.digestNone }}</option>
+            @for (h of hours; track h) {
+              <option [value]="h" [selected]="h === third()">{{ label(h) }}</option>
             }
           </select>
         </label>
@@ -213,6 +223,7 @@ export class SettingsPage implements OnDestroy {
 
   readonly first = computed(() => this.slots()[0] ?? DEFAULT_DIGEST_HOUR);
   readonly second = computed(() => this.slots()[1] ?? null);
+  readonly third = computed(() => this.slots()[2] ?? null);
 
   /**
    * Re-read every half minute, so the sentence below the button stays true as
@@ -249,15 +260,19 @@ export class SettingsPage implements OnDestroy {
     return `${String(hour).padStart(2, '0')}:00`;
   }
 
-  pickFirst(event: Event): void {
-    const hour = Number((event.target as HTMLSelectElement).value);
-    const second = this.second();
-    void this.profiles.setDigestHours(second === null ? [hour] : [hour, second]);
-  }
-
-  pickSecond(event: Event): void {
+  /**
+   * One picker for all three boxes.
+   *
+   * Empty means "not this one", and the empties are dropped rather than kept
+   * as holes: turning the second round off while a third is set moves the
+   * third up into its place, which is what the list then shows. The first box
+   * has no empty option - a schedule with no rounds at all is not a setting,
+   * it is the app switched off.
+   */
+  pick(index: number, event: Event): void {
     const raw = (event.target as HTMLSelectElement).value;
-    // Empty means "only one round a day", which is the common case.
-    void this.profiles.setDigestHours(raw === '' ? [this.first()] : [this.first(), Number(raw)]);
+    const chosen: (number | null)[] = [this.first(), this.second(), this.third()];
+    chosen[index] = raw === '' ? null : Number(raw);
+    void this.profiles.setDigestHours(chosen.filter((h): h is number => h !== null));
   }
 }

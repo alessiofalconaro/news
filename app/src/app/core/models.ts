@@ -26,8 +26,12 @@ export const DEFAULT_STORIES = 5;
 export const MIN_DIGEST_HOUR = 6;
 export const MAX_DIGEST_HOUR = 22;
 export const DEFAULT_DIGEST_HOUR = 10;
-/** Two is plenty: more would mostly produce empty rounds. */
-export const MAX_DIGEST_SLOTS = 2;
+/**
+ * Three: morning, afternoon, evening. Beyond that the rounds mostly come back
+ * empty - `seenArticles` excludes whatever the earlier ones already used, and
+ * there is only so much news in a day.
+ */
+export const MAX_DIGEST_SLOTS = 3;
 
 export interface Profile {
   id: string;
@@ -35,10 +39,10 @@ export interface Profile {
   displayName: string;
   language: Lang;
   /**
-   * Hours in Europe/Rome at which this account wants a digest, one or two.
+   * Hours at which this account wants a digest, up to three, in its own zone.
    *
-   * Two because a morning round and an evening round are different readings,
-   * not the same one repeated: the evening one only carries what came out
+   * More than one because a morning round and an evening round are different
+   * readings, not the same one repeated: each carries only what has come out
    * since. The schedule is per account, so two people sharing the app read
    * their news at their own times.
    */

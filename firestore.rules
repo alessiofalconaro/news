@@ -37,7 +37,7 @@ service cloud.firestore {
     function validDigestHours(d) {
       return !('digestHours' in d.keys())
         || (d.digestHours is list
-            && d.digestHours.size() >= 1 && d.digestHours.size() <= 2
+            && d.digestHours.size() >= 1 && d.digestHours.size() <= 3
             && d.digestHours.hasOnly([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]));
     }
 

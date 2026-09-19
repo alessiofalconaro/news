@@ -17,16 +17,16 @@ import { daysAgo, safeZone } from './time.ts';
 import type { Article, Profile, Topic, TopicNames } from './types.ts';
 
 /**
- * One or two hours, sane and sorted. A profile written before this setting
- * existed has none, and one written before two were allowed carries a single
- * `digestHour`: both still have to work.
+ * Up to three hours, sane and sorted. A profile written before this setting
+ * existed has none, and one written before several were allowed carries a
+ * single `digestHour`: both still have to work.
  */
 function hoursOf(data: Record<string, unknown>): number[] {
   const raw = Array.isArray(data['digestHours'])
     ? (data['digestHours'] as unknown[])
     : [data['digestHour']];
   const hours = raw.map(Number).filter((h) => Number.isInteger(h) && h >= 0 && h <= 23);
-  return hours.length ? [...new Set(hours)].sort((a, b) => a - b).slice(0, 2) : [10];
+  return hours.length ? [...new Set(hours)].sort((a, b) => a - b).slice(0, 3) : [10];
 }
 
 let db: Firestore | null = null;

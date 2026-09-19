@@ -45,14 +45,17 @@ function emptyDraft(): Draft {
       <div>
         <h1>{{ t().topics.title }}</h1>
         <p class="count">{{ t().topics.activeCount(topics.activeCount(), maxActive) }}</p>
-        <!-- The order is not decoration: it decides the shape of the digest
-             and what the notification says, and nothing on screen said so. -->
-        @if (topics.topics().length > 1) {
-          <p class="order-hint">{{ t().topics.orderHint }}</p>
-        }
       </div>
       <button class="btn btn-primary add" (click)="startCreate()">＋ {{ t().topics.add }}</button>
     </header>
+
+    <!-- The order is not decoration: it decides the shape of the digest and
+         what the notification says, and nothing on screen said so. Below the
+         header rather than inside it: sharing that row with the button left it
+         a narrow column of text running four lines down one side. -->
+    @if (topics.topics().length > 1) {
+      <p class="order-hint">{{ t().topics.orderHint }}</p>
+    }
 
     @if (!topics.ready()) {
       <div class="skeleton-list">
@@ -237,8 +240,7 @@ function emptyDraft(): Draft {
         white-space: nowrap;
       }
       .order-hint {
-        margin: 8px 0 0;
-        max-width: 46ch;
+        margin: -4px 0 16px;
         color: var(--text-dim);
         font-size: 0.78rem;
         line-height: 1.45;

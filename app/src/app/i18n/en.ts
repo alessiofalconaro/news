@@ -140,6 +140,7 @@ export const en: Dictionary = {
       'When you want the news ready, in the local time where you are. It applies to you only.',
     digestFirst: 'First round',
     digestSecond: 'Second round',
+    digestThird: 'Third round',
     digestNone: 'None',
     refresh: 'Refresh now',
     refreshHint:

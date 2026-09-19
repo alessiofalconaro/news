@@ -144,6 +144,7 @@ export const it = {
       'A che ora vuoi trovare le notizie pronte, ora locale di dove ti trovi. Vale solo per te.',
     digestFirst: 'Prima tornata',
     digestSecond: 'Seconda tornata',
+    digestThird: 'Terza tornata',
     digestNone: 'Nessuna',
     refresh: 'Aggiorna adesso',
     refreshHint:
