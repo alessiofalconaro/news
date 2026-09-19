@@ -9,6 +9,7 @@ import { I18n } from './i18n/i18n.service';
 import { firebaseConfigured } from './core/firebase.config';
 import { LangToggle } from './lang-toggle';
 import { UntranslatedBanner } from './topics/untranslated-banner';
+import { TopicFilterService } from './digest/topic-filter.service';
 
 /** Bottom navigation, in order. Icons are plain emoji, as in both reference apps. */
 const NAV = [
@@ -391,6 +392,7 @@ const NAV = [
 export class App {
   readonly auth = inject(AuthService);
   readonly theme = inject(Theme);
+  private readonly filter = inject(TopicFilterService);
   private readonly i18n = inject(I18n);
   private readonly router = inject(Router);
   private readonly updates = inject(Updates);
@@ -579,8 +581,20 @@ export class App {
     const changing = this.active() !== index;
     this.active.set(index); // optimistic: the indicator stays under the finger
     queueMicrotask(() => this.placeIndicator(index));
-    if (changing) void this.router.navigate([NAV[index].path]);
-    else window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (changing) {
+      void this.router.navigate([NAV[index].path]);
+      return;
+    }
+
+    // Pressing the section you are already in means "take me back to the top
+    // of it". On Today that includes the chips: a filter is a narrowing of the
+    // page, and asking for the page again asks for all of it. Coming back from
+    // another section is not that - it is just arriving - so the filter you
+    // left set is still there when you return, which is what you meant by
+    // setting it.
+    if (index === 0) this.filter.clear();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 

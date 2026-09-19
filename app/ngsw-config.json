@@ -15,6 +15,14 @@
       "installMode": "lazy",
       "updateMode": "prefetch",
       "resources": { "files": ["/icons/**", "/*.(png|jpg|jpeg|svg|webp|gif|woff2)"] }
+    },
+    {
+      "name": "fonts",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "urls": ["https://fonts.googleapis.com/**", "https://fonts.gstatic.com/**"]
+      }
     }
   ]
 }
