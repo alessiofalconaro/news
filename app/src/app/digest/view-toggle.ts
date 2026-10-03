@@ -19,7 +19,7 @@ import { ViewModeService } from './view-mode.service';
 @Component({
   selector: 'app-view-toggle',
   template: `
-    <button class="view-toggle" (click)="viewMode.toggle()" [attr.aria-label]="label()">
+    <button class="icon-btn view-toggle" (click)="viewMode.toggle()" [attr.aria-label]="label()">
       @if (viewMode.mode() === 'list') {
         <!-- One card at a time, with the next ones waiting at the sides. -->
         <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -42,17 +42,10 @@ import { ViewModeService } from './view-mode.service';
         display: inline-flex;
         flex: none;
       }
+      /* the round glass button of styles.scss (.icon-btn) */
       .view-toggle {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        padding: 0;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--border);
-        background: var(--surface);
-        color: var(--text-soft);
+        width: 42px;
+        height: 42px;
       }
       .view-toggle svg {
         width: 20px;
@@ -65,9 +58,7 @@ import { ViewModeService } from './view-mode.service';
         stroke-linecap: round;
         stroke-linejoin: round;
       }
-      .view-toggle:active {
-        background: var(--surface-2);
-      }
+
     `,
   ],
 })

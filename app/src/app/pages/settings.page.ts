@@ -8,10 +8,11 @@ import { PushService } from '../core/push.service';
 import { nextRound, nextWakeUp, wouldReplace } from '../digest/schedule';
 import { DEFAULT_DIGEST_HOUR, MAX_DIGEST_HOUR, MIN_DIGEST_HOUR } from '../core/models';
 import { LangToggle } from '../lang-toggle';
+import { Notice } from '../notice';
 
 @Component({
   selector: 'app-settings',
-  imports: [LangToggle],
+  imports: [LangToggle, Notice],
   template: `
     <h1>{{ t().settings.title }}</h1>
 
@@ -27,7 +28,13 @@ import { LangToggle } from '../lang-toggle';
         <h2>{{ t().settings.theme }}</h2>
       </div>
       <button class="btn" (click)="theme.toggle()">
-        {{ theme.light() ? '☀️ ' + t().settings.themeLight : '🌙 ' + t().settings.themeDark }}
+        @if (theme.light()) {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4" /></svg>
+          {{ t().settings.themeLight }}
+        } @else {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z" /></svg>
+          {{ t().settings.themeDark }}
+        }
       </button>
     </section>
 
@@ -80,7 +87,10 @@ import { LangToggle } from '../lang-toggle';
       <p class="effect">{{ effect() }}</p>
 
       @if (refresh.pending()) {
-        <p class="pending">⏳ {{ t().settings.refreshPending }}</p>
+        <p class="pending">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4" /></svg>
+          {{ t().settings.refreshPending }}
+        </p>
         <button class="btn" (click)="refresh.cancel()">{{ t().settings.refreshCancel }}</button>
       } @else {
         <button class="btn btn-primary" (click)="refresh.request()">
@@ -89,7 +99,7 @@ import { LangToggle } from '../lang-toggle';
       }
 
       @if (refresh.error()) {
-        <p class="banner banner-error">{{ t().settings.refreshError }}</p>
+        <app-notice class="notice" tone="error" [text]="t().settings.refreshError" />
       }
     </section>
 
@@ -99,7 +109,10 @@ import { LangToggle } from '../lang-toggle';
 
       @switch (push.state()) {
         @case ('on') {
-          <p class="on">✓ {{ t().settings.notificationsOn }}</p>
+          <p class="on">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+            {{ t().settings.notificationsOn }}
+          </p>
           <div class="buttons">
             <button class="btn btn-ghost" [disabled]="push.busy()" (click)="push.disable()">
               {{ t().settings.notificationsDisable }}
@@ -123,7 +136,7 @@ import { LangToggle } from '../lang-toggle';
       }
 
       @if (push.error()) {
-        <p class="banner banner-error">{{ push.error() }}</p>
+        <app-notice class="notice" tone="error" [text]="push.error() ?? ''" />
       }
     </section>
 
@@ -199,8 +212,33 @@ import { LangToggle } from '../lang-toggle';
         color: var(--warn);
         font-size: 0.88rem;
       }
-      .banner {
+      .notice {
         margin-top: 12px;
+      }
+      .pending svg,
+      .on svg {
+        width: 16px;
+        height: 16px;
+        flex: none;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .pending,
+      .on {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .pending svg {
+        animation: spin 1.6s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
     `,
   ],

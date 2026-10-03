@@ -393,3 +393,35 @@ Tutti i testi passano dal sistema di traduzioni (spec §8.1): **nessuna stringa 
 7. `@media (prefers-reduced-motion: reduce)` disattiva tutto.
 8. Nessuna interazione affidata al solo hover.
 9. Il modello di scroll di A8 non si tocca.
+
+---
+
+# Parte C — Ottobre 2026: liquid glass, marchio animato
+
+Allineato a budget-tracker e dj-calendar.
+
+- **Vetro** (`styles.scss`, blocco "Liquid glass"): aloni di colore **fermi** in
+  `body::before`; le card usano `--glass-bg` (gradiente, solo come
+  `background`) + `--glass-border`/`--glass-shadow`, **senza**
+  `backdrop-filter`. Blur vero solo su dock, fogli/dialog e striscia dei chip.
+  `--surface` resta pieno (per ciò che copre altro), `--surface-2/3` sono
+  velature. Pulsanti, chip, select a pillola; principale = gradiente
+  `--brand`→`--brand-2`. Topbar piena che sfuma nella pagina (`.topbar::after`).
+- **Icone**: niente emoji. Dock e sidebar con icone a linee SVG (`NAV` in
+  `app.ts`), tema sole/luna a linee, interruttore iOS per "attivo" nei topic.
+- **Marchio** (`mark.ts`, `<app-mark>`): tessera dell'icona disegnata in SVG
+  (righe e barra si muovono da sole) + "NewsDigest" in **Playfair Display 800**
+  (`--font-mark`), ospitato in `public/fonts/` e ridotto alle sole lettere del
+  nome. In topbar fa un seguito discreto dello splash all'ingresso e a ogni tocco.
+- **Splash** (`#boot` in `index.html`, FUORI da `<app-root>`): una prima pagina
+  che va in stampa — la tessera atterra, le righe si stampano, la barra cade,
+  un segnale "in onda" parte due volte, il nome sale lettera per lettera come un
+  ticker. Lo toglie `hideSplash()` (`splash.ts`) mai prima di 1,7s; aspetta il
+  login senza limite e i digest al massimo 8s. ⚠️ Lo script inline del tema in
+  `index.html` non va toccato: il suo hash è nella CSP di `firebase.json`.
+- **Avvisi** (`notice.ts`, `<app-notice>`): spariscono da soli dopo 7s, con la x
+  e una linea che si consuma.
+- **Titoli**: `text-wrap: balance` + `tidyHeadline()` (spazi indivisibili tra le
+  ultime due parole, dopo le parole di 1-2 lettere, prima dei numeri).
+- ⚠️ Chrome headless ha la finestra larga almeno 500px e congela le animazioni
+  nate dopo il load: per gli screenshot usare 500px e accelerare le animazioni.

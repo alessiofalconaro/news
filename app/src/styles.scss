@@ -1,18 +1,27 @@
-/* ===== NewsDigest - global theme (dark by default). Tokens come from DESIGN.md. ===== */
+/* ===== NewsDigest - global theme (dark by default). Tokens come from DESIGN.md. =====
+   Look "liquid glass", the same family as budget-tracker and dj-calendar: a
+   still background with two halos of colour, cards that are a light veil with a
+   lit top edge and a wide soft shadow, controls shaped as pills. Real blur only
+   on what floats - the dock, the sheets, the sticky chip strip. */
 
 :root {
-  --bg: #0d0e11;
-  --surface: #16181d;
-  --surface-2: #1e2127;
-  --surface-3: #272b33;
-  --border: #262a32;
-  --border-soft: #1d2027;
+  --bg: #08090c;
+  /* Solid surface "in relief": sheets, dialogs, anything that sits ON TOP of
+     something else and has to cover it. */
+  --surface: #15171c;
+  /* Inside cards: translucent veils, so the light of the glass comes through. */
+  --surface-2: rgba(255, 255, 255, 0.055);
+  --surface-3: rgba(255, 255, 255, 0.1);
+  --border: rgba(255, 255, 255, 0.085);
+  --border-soft: rgba(255, 255, 255, 0.05);
 
-  --text: #eceef2;
-  --text-soft: #9096a1;
-  --text-dim: #626875;
+  --text: #eef0f4;
+  --text-soft: #959baa;
+  --text-dim: #626876;
 
-  --brand: #e4713c;
+  --brand: #e9743f;
+  /* second tint of the gradient on primary buttons and the active nav entry */
+  --brand-2: #f4a35b;
   --brand-dark: #d3622d;
   --brand-ink: #1e0d05;
 
@@ -21,14 +30,33 @@
   --warn: #e3b23c;
   --danger: #e35d5d;
 
-  --radius: 14px;
-  --radius-sm: 10px;
-  --radius-xs: 8px;
+  --radius: 22px;
+  --radius-sm: 14px;
+  --radius-xs: 10px;
   --radius-pill: 999px;
 
-  --shadow: 0 8px 30px rgba(0, 0, 0, 0.28);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --ring: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent);
+  --shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.75), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 4px 14px -4px rgba(0, 0, 0, 0.45);
+  --ring: 0 0 0 4px color-mix(in srgb, var(--brand) 20%, transparent);
+
+  /* ---- Liquid glass ----
+     Cards do NOT use backdrop-filter: on a phone, with dozens of them
+     scrolling, it heats up and stutters. The glass is a light veil on a
+     gradient, a lit top edge and a wide soft shadow, over a STILL background
+     with two halos (body::before). Use --glass-bg only as a `background`. */
+  --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.03) 100%);
+  --glass-border: rgba(255, 255, 255, 0.085);
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.085);
+  --glass-shadow: var(--glass-edge), 0 18px 40px -22px rgba(0, 0, 0, 0.9);
+  /* sheets and dialogs: nearly opaque, blurring what is underneath */
+  --sheet-bg: rgba(21, 23, 29, 0.84);
+  --blur: blur(28px) saturate(1.8);
+  --backdrop: rgba(0, 0, 0, 0.5);
+  /* the raised pill of a segmented control */
+  --seg-on: rgba(255, 255, 255, 0.13);
+  --seg-on-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+  --halo-1: rgba(233, 116, 63, 0.13);
+  --halo-2: rgba(96, 120, 255, 0.13);
 
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -44,13 +72,17 @@
      exactly what iOS paints in the status bar above it (the web app asks for
      the black bar in index.html), so the two meet without a seam. Anything
      lighter - the card colour it used to have - drew a band across the top of
-     the screen. */
+     the screen. It fades into the page below (.topbar::after in app.ts). */
   --topbar-bg: #000000;
 
   --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-body:
     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji';
+  /* The masthead, "NewsDigest" only: a high-contrast newspaper serif, the way
+     a front page prints its name. Hosted in public/fonts, cut down to the
+     nine letters it has to draw. */
+  --font-mark: 'Playfair Display', 'Newsreader', Georgia, serif;
 
   /* Horizontal page padding, shared by the content column and the chip row that
      bleeds through it. */
@@ -60,18 +92,19 @@
 }
 
 body.theme-light {
-  --bg: #f7f6f3;
+  --bg: #f3f2ef;
   --surface: #ffffff;
-  --surface-2: #f1efea;
-  --surface-3: #e7e4dd;
-  --border: #e3e0d9;
-  --border-soft: #eeece7;
+  --surface-2: rgba(40, 30, 20, 0.045);
+  --surface-3: rgba(40, 30, 20, 0.085);
+  --border: rgba(40, 30, 20, 0.1);
+  --border-soft: rgba(40, 30, 20, 0.06);
 
   --text: #17181c;
   --text-soft: #5e6472;
   --text-dim: #949aa6;
 
-  --brand: #c2551f;
+  --brand: #d4612a;
+  --brand-2: #ec9446;
   --brand-dark: #ab4917;
   --brand-ink: #fff6f1;
 
@@ -80,8 +113,19 @@ body.theme-light {
   --warn: #a87708;
   --danger: #c8433f;
 
-  --shadow: 0 8px 30px rgba(30, 25, 20, 0.08);
-  --shadow-sm: 0 2px 8px rgba(30, 25, 20, 0.06);
+  --shadow: 0 18px 44px -18px rgba(60, 40, 20, 0.25), 0 2px 6px rgba(60, 40, 20, 0.06);
+  --shadow-sm: 0 4px 14px -4px rgba(60, 40, 20, 0.16);
+
+  --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.68) 100%);
+  --glass-border: rgba(255, 255, 255, 0.95);
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 1);
+  --glass-shadow: var(--glass-edge), 0 14px 34px -20px rgba(80, 55, 30, 0.36);
+  --sheet-bg: rgba(255, 255, 255, 0.86);
+  --backdrop: rgba(30, 22, 15, 0.28);
+  --seg-on: #ffffff;
+  --seg-on-shadow: inset 0 1px 0 rgba(255, 255, 255, 1), 0 4px 12px -4px rgba(80, 55, 30, 0.25);
+  --halo-1: rgba(233, 116, 63, 0.16);
+  --halo-2: rgba(96, 120, 255, 0.13);
 
   /* The page colour, so the bar and what it sits on are one surface. The
      status bar above stays black whatever the theme - iOS reads that choice
@@ -91,6 +135,16 @@ body.theme-light {
   --topbar-bg: var(--bg);
 
   color-scheme: light;
+}
+
+/* Playfair Display 800, only the letters of "NewsDigest". font-display: block
+   because on the splash a flash of the fallback font is plainly visible. */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 800;
+  font-display: block;
+  src: url('/fonts/playfair-800-marchio.woff2') format('woff2');
 }
 
 * {
@@ -125,6 +179,20 @@ body {
   touch-action: manipulation;
 }
 
+/* The glass's background: two halos of colour, STILL (no animation: the app has
+   to stay light). One fixed layer behind everything, painted once. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 45% at 0% 6%, var(--halo-1), transparent 70%),
+    radial-gradient(55% 40% at 100% 40%, var(--halo-2), transparent 70%),
+    radial-gradient(70% 40% at 30% 100%, color-mix(in srgb, var(--halo-1) 70%, transparent), transparent 70%);
+}
+
 button {
   font-family: inherit;
   cursor: pointer;
@@ -141,14 +209,20 @@ h2,
 h3 {
   margin: 0;
   font-weight: 700;
+  /* No line left holding a single word, letter or number: the lines of a
+     title share the words out evenly. */
+  text-wrap: balance;
 }
 h1 {
   font-family: var(--font-display);
-  font-size: 1.55rem;
-  letter-spacing: -0.02em;
+  font-size: 1.7rem;
+  letter-spacing: -0.025em;
 }
 h2 {
   font-size: 1rem;
+}
+p {
+  text-wrap: pretty;
 }
 
 .num {
@@ -158,11 +232,15 @@ h2 {
 
 /* ---- reusable pieces ---- */
 
+/* Card = a sheet of glass: gradient veil, lit top edge, wide shadow. It rises
+   into place once, when it first appears. */
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
+  box-shadow: var(--glass-shadow);
   padding: 16px;
+  animation: rise 0.42s cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 
 .chip {
@@ -171,16 +249,24 @@ h2 {
   gap: 6px;
   padding: 8px 14px;
   border-radius: var(--radius-pill);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-edge);
   color: var(--text);
   font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
   min-height: 36px;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.08s ease;
+}
+.chip:active {
+  transform: scale(0.97);
 }
 .chip.on {
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
   border-color: transparent;
   color: var(--brand-ink);
 }
@@ -203,37 +289,53 @@ h2 {
   flex: none;
 }
 
+/* Buttons are pills. The primary one is the brand gradient with a halo. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   min-height: 44px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-edge);
   color: var(--text);
-  padding: 10px 16px;
-  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  border-radius: var(--radius-pill);
   font-size: 0.9rem;
   font-weight: 600;
   transition:
     background 0.15s ease,
-    transform 0.06s ease,
-    border-color 0.15s ease;
+    transform 0.08s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 .btn:hover {
   background: var(--surface-3);
 }
 .btn:active {
-  transform: scale(0.985);
+  transform: scale(0.97);
+}
+.btn svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .btn-primary {
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
   border-color: transparent;
   color: var(--brand-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 8px 22px -8px color-mix(in srgb, var(--brand) 70%, transparent);
 }
 .btn-primary:hover {
-  background: var(--brand-dark);
+  background: linear-gradient(135deg, var(--brand-dark), var(--brand));
 }
 .btn:disabled {
   opacity: 0.45;
@@ -243,6 +345,7 @@ h2 {
 .btn-ghost {
   background: transparent;
   border-color: transparent;
+  box-shadow: none;
   color: var(--text-soft);
 }
 .btn-ghost:hover {
@@ -253,8 +356,42 @@ h2 {
   color: var(--danger);
 }
 .btn-danger:hover {
-  border-color: var(--danger);
-  background: transparent;
+  border-color: color-mix(in srgb, var(--danger) 50%, transparent);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+/* A round glass button holding one line icon (theme, layout switch, close). */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
+  color: var(--text-soft);
+  transition:
+    color 0.15s ease,
+    transform 0.08s ease;
+}
+.icon-btn:active {
+  transform: scale(0.94);
+}
+.icon-btn:hover {
+  color: var(--text);
+}
+.icon-btn svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .badge {
@@ -287,13 +424,29 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text);
-  padding: 11px 13px;
+  padding: 11px 14px;
   /* 16px: below that iOS auto-zooms the page when the field takes focus. */
   font-size: 16px;
   width: 100%;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease;
+}
+/* Our own arrow, so the drop-downs are pills of glass like the rest instead of
+   the system's grey box. */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  border-radius: var(--radius-pill);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23959baa' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 16px;
+}
+select option {
+  background: var(--surface);
+  color: var(--text);
 }
 input:focus,
 select:focus,
@@ -350,20 +503,21 @@ label {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 11px 14px;
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
   line-height: 1.4;
+  box-shadow: var(--glass-edge);
 }
 .banner-warn {
   color: var(--warn);
-  background: color-mix(in srgb, var(--warn) 12%, var(--bg));
-  border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+  background: color-mix(in srgb, var(--warn) 11%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warn) 34%, transparent);
 }
 .banner-error {
   color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 12%, var(--bg));
-  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  background: color-mix(in srgb, var(--danger) 11%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 34%, transparent);
 }
 
 /* Loading skeletons: the reference apps only show a line of text, but a digest
@@ -396,7 +550,7 @@ label {
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -426,41 +580,319 @@ app-root {
   min-height: 100dvh;
 }
 
+/* ===== The mark: logo tile + "NewsDigest" =====
+   Shared by the splash (written by hand in index.html, outside Angular) and by
+   <app-mark> in the top bar and the sidebar. The tile is the icon drawn in
+   SVG rather than the PNG, so its three lines of print and its column rule can
+   move on their own. Only transform and opacity are animated, in px rather
+   than %, every element in its final state when no animation runs. */
+.mark-tile {
+  position: relative;
+  display: block;
+  flex: none;
+}
+.mark-tile svg {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.mark-tile .tile-bg {
+  fill: var(--brand);
+}
+.mark-tile .line,
+.mark-tile .rule {
+  fill: #fff6f1;
+  transform-box: fill-box;
+}
+.mark-tile .line {
+  transform-origin: left center;
+}
+.mark-tile .rule {
+  opacity: 0.62;
+  transform-origin: center top;
+}
+/* The "on air" ring: a rounded square of light that leaves the tile and fades,
+   like a signal going out. */
+.mark-tile .wave {
+  position: absolute;
+  inset: 0;
+  border-radius: 24%;
+  border: 2px solid var(--brand);
+  opacity: 0;
+  pointer-events: none;
+}
+.mark-word {
+  display: inline-flex;
+  font-family: var(--font-mark);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  /* the letters rise out of a slot, like a line of a ticker */
+  overflow: hidden;
+  padding: 0.04em 0.02em 0.1em;
+}
+.mark-word .ch {
+  display: inline-block;
+}
+.mark-word .digest {
+  color: var(--brand);
+}
+
 /* ===== Launch splash =====
-   Written into index.html inside <app-root>, so it is on screen from the very
-   first paint, and rendered again by the shell while sign-in is being checked -
-   the same markup both times, so the handover to Angular is invisible.
+   Written by hand into index.html OUTSIDE <app-root>, so it is on screen from
+   the very first paint and Angular never redraws it (a redraw would restart
+   the animation). hideSplash() in src/app/splash.ts takes it away once the app
+   is ready, never before the animation has played, with a fade.
    Before this the app opened blank, then said "Avvio", then "Controllo
-   dell'accesso": a program narrating its own steps, and the two changes of text
-   made a short wait feel like a long one. */
+   dell'accesso": a program narrating its own steps.
+
+   The animation is a front page going to press: the tile lands, its three
+   lines of print run out one after the other as if typeset, the column rule
+   drops in, a signal ring goes out twice (the news is live), and the name
+   rolls up letter by letter out of a slot like a ticker, underlined by a rule
+   that runs across. If loading takes longer, a thin ticker keeps scanning. */
 .boot {
   position: fixed;
   inset: 0;
+  /* over the top bar (70) and the dock: the wait can happen with the layout
+     already mounted underneath */
+  z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 20px;
   background: var(--bg);
+  transition: opacity 0.34s ease;
 }
-.boot img {
-  width: 76px;
-  height: 76px;
-  border-radius: 18px;
+.boot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 30% at 50% 42%, var(--halo-1), transparent 70%),
+    radial-gradient(60% 40% at 80% 100%, var(--halo-2), transparent 70%);
 }
-.boot span {
-  font-family: var(--font-display);
-  font-size: 1.2rem;
-  font-weight: 700;
+.boot.out {
+  opacity: 0;
+  pointer-events: none;
+}
+.boot .mark-tile {
+  width: 88px;
+  height: 88px;
+  animation: tile-land 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+}
+.boot .mark-tile svg {
+  filter: drop-shadow(0 14px 26px color-mix(in srgb, var(--brand) 45%, transparent));
+}
+.boot .line {
+  animation: print 0.42s cubic-bezier(0.3, 0.7, 0.2, 1) both;
+}
+.boot .line:nth-of-type(1) {
+  animation-delay: 0.38s;
+}
+.boot .line:nth-of-type(2) {
+  animation-delay: 0.52s;
+}
+.boot .line:nth-of-type(3) {
+  animation-delay: 0.66s;
+}
+.boot .rule {
+  animation: rule-drop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.8s both;
+}
+.boot .wave {
+  animation: wave 1s cubic-bezier(0.2, 0.7, 0.3, 1) 1s both;
+}
+.boot .wave + .wave {
+  animation-delay: 1.28s;
+}
+.boot .mark-word {
+  position: relative;
+  font-size: 2rem;
   color: var(--text);
+}
+.boot .mark-word .ch {
+  will-change: transform;
+  /* two separate animations: the roll (transform/opacity, on the GPU) and the
+     flash of colour. In one keyframe the colour would drag the movement onto
+     the main thread, which is busy starting the app. */
+  animation:
+    roll 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15) both,
+    ink 0.6s ease-out both;
+  animation-delay: calc(0.55s + var(--i) * 45ms);
+}
+.boot .mark-word .digest {
+  animation-name: roll;
+  animation-duration: 0.5s;
+}
+.boot .underline {
+  display: block;
+  width: 168px;
+  height: 2px;
+  margin-top: -14px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--brand) 25%, var(--brand-2) 75%, transparent);
+  transform-origin: left center;
+  animation: run-across 0.6s cubic-bezier(0.3, 0.7, 0.2, 1) 1.05s both;
+}
+/* still loading after the animation: a thin ticker that keeps scanning */
+.boot .ticker {
+  position: relative;
+  width: 64px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+  opacity: 0;
+  animation: fade-in 0.4s ease 1.9s both;
+}
+.boot .ticker::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 22px;
+  border-radius: 3px;
+  background: var(--brand);
+  animation: scan 1.1s cubic-bezier(0.45, 0, 0.55, 1) 1.9s infinite alternate;
 }
 
 /* Set by the inline script in index.html, before the first paint: the theme is
    a class on <body> that only exists once the app is running, and someone who
    chose the light theme would get a dark flash on every launch without this. */
 html.boot-light .boot {
-  background: #f7f6f3;
+  background: #f3f2ef;
 }
-html.boot-light .boot span {
+html.boot-light .boot .mark-word {
   color: #17181c;
+}
+html.boot-light .boot .ticker {
+  background: rgba(40, 30, 20, 0.08);
+}
+
+/* splash - the tile lands: from small and low, a touch past full size, settles */
+@keyframes tile-land {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.06);
+  }
+  100% {
+    transform: none;
+  }
+}
+/* a line of print runs out from the left margin */
+@keyframes print {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    transform: none;
+  }
+}
+/* the column rule drops in from above */
+@keyframes rule-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) scaleY(0.4);
+  }
+  to {
+    opacity: 0.62;
+    transform: none;
+  }
+}
+/* the signal ring going out */
+@keyframes wave {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.75);
+  }
+}
+/* a letter rolls up out of its slot, like a ticker */
+@keyframes roll {
+  0% {
+    opacity: 0;
+    transform: translateY(105%);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+/* the letters arrive in ink orange, then settle to their own colour */
+@keyframes ink {
+  0%,
+  45% {
+    color: var(--brand);
+  }
+}
+@keyframes run-across {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes scan {
+  to {
+    transform: translateX(42px);
+  }
+}
+
+/* top bar - the discreet sequel: one ring, the lines reprinted quickly, the
+   letters sliding up into place. Started by <app-mark> (.play). */
+@keyframes tile-settle {
+  from {
+    transform: scale(0.82);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(70%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes wave-soft {
+  0% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
 }

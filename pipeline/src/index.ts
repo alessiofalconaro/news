@@ -91,7 +91,7 @@ async function runTopic(topic: TopicResult['topic']): Promise<TopicResult> {
 
   const byId = new Map(unseen.map((a) => [a.id, a]));
   const stories = await writeStories(topic.name, selected, byId);
-  await attachImages(stories);
+  await attachImages(topic.name, stories);
   detail(`${stories.length} storie scritte`);
 
   return { topic, stories, counts };

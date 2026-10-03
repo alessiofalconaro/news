@@ -49,7 +49,7 @@ function parseDate(date: string): Date {
           <div class="day">
             <button class="row" (click)="toggle(digest)" [attr.aria-expanded]="isOpen(digest)">
               <span class="label">{{ i18n.fullDate(dateOf(digest)) }}</span>
-              <span class="chev" [class.open]="isOpen(digest)">›</span>
+              <svg class="chev" [class.open]="isOpen(digest)" viewBox="0 0 20 20" aria-hidden="true"><path d="M8 5l5 5-5 5" /></svg>
             </button>
 
             @if (isOpen(digest)) {
@@ -95,9 +95,10 @@ function parseDate(date: string): Date {
         width: 100%;
         min-height: 52px;
         padding: 12px 16px;
-        border: 1px solid var(--border);
+        border: 1px solid var(--glass-border);
         border-radius: var(--radius);
-        background: var(--surface);
+        background: var(--glass-bg);
+        box-shadow: var(--glass-shadow);
         color: var(--text);
         text-align: left;
         font-size: 0.95rem;
@@ -111,10 +112,15 @@ function parseDate(date: string): Date {
         text-transform: capitalize;
       }
       .chev {
-        color: var(--text-dim);
-        font-size: 1.3rem;
-        line-height: 1;
-        transition: transform 0.2s ease;
+        flex: none;
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: var(--text-dim);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition: transform 0.25s cubic-bezier(0.34, 1.3, 0.5, 1);
       }
       .chev.open {
         transform: rotate(90deg);

@@ -201,23 +201,30 @@ function colorFromName(name: string): string {
         top: calc(56px + var(--safe-top) + var(--topbar-clear, 0px));
         z-index: 20;
         margin-bottom: 6px;
-        background: var(--bg);
+        /* frosted, so the stories pass under it blurred rather than cut off */
+        margin-inline: calc(-1 * var(--page-pad));
+        padding-left: var(--page-pad);
+        background: color-mix(in srgb, var(--bg) 74%, transparent);
+        backdrop-filter: var(--blur);
+        -webkit-backdrop-filter: var(--blur);
       }
       .filter-bar .chip-row {
         flex: 1;
         min-width: 0;
-        /* Only the far side bleeds now: the near side belongs to the button. */
-        margin-left: 0;
+        /* The bar itself now runs edge to edge; the strip scrolls inside it
+           and keeps the page's margin at its far end. */
+        margin-inline: 0;
         padding-left: 0;
-      }
-      .filter-bar .chip {
-        border-color: var(--border);
+        padding-right: var(--page-pad);
       }
       .filter-bar .chip.on {
         /* The topic's own colour rather than the brand orange: four chips lit
            up in the same orange say nothing about which topics they are. */
-        background: color-mix(in srgb, var(--accent) 18%, var(--surface-2));
-        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 20%, transparent);
+        border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.12),
+          0 6px 16px -8px var(--accent);
         color: var(--text);
       }
       .filter-bar .count {
@@ -267,8 +274,9 @@ function colorFromName(name: string): string {
           height: 34px;
           padding: 0;
           border-radius: 50%;
-          border: 1px solid var(--border);
+          border: 1px solid var(--glass-border);
           background: var(--surface);
+          box-shadow: var(--glass-edge);
           color: var(--text-soft);
         }
         .arrow svg {
@@ -308,8 +316,10 @@ function colorFromName(name: string): string {
 
         /* With the arrows there, the strip no longer needs to run off the edge
            of the page: nothing is dragging it from there. */
+        .filter-bar {
+          padding-right: var(--page-pad);
+        }
         .filter-bar .chip-row {
-          margin-right: 0;
           padding-right: 0;
         }
       }
@@ -324,21 +334,25 @@ function colorFromName(name: string): string {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-bottom: 10px;
-        padding-bottom: 8px;
-        border-bottom: 2px solid var(--accent);
+        margin-bottom: 12px;
+        padding-bottom: 9px;
+        /* a hairline in the topic's colour that fades out to the right */
+        border-bottom: 1px solid transparent;
+        border-image: linear-gradient(90deg, var(--accent), transparent 85%) 1;
       }
       .head .dot {
         background: var(--accent);
-        width: 0.7em;
-        height: 0.7em;
+        width: 0.6em;
+        height: 0.6em;
+        box-shadow: 0 0 10px var(--accent);
       }
       .head h2 {
         flex: 1;
         min-width: 0;
-        font-size: 0.95rem;
+        font-size: 0.82rem;
+        font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.12em;
         color: var(--accent);
         overflow: hidden;
         text-overflow: ellipsis;

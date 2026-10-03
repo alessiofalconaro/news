@@ -7,6 +7,7 @@ import { ProfileService } from '../core/profile.service';
 import { TopicsService } from '../topics/topics.service';
 import { TopicSections } from '../digest/topic-sections';
 import { ViewToggle } from '../digest/view-toggle';
+import { Notice } from '../notice';
 import type { Story } from '../core/models';
 
 /**
@@ -27,7 +28,7 @@ function today(): string {
  */
 @Component({
   selector: 'app-today',
-  imports: [TopicSections, ViewToggle, RouterLink],
+  imports: [TopicSections, ViewToggle, RouterLink, Notice],
   template: `
     <header class="head">
       <div>
@@ -71,9 +72,7 @@ function today(): string {
       }
     } @else {
       @if (digest()!.status === 'partial' && digest()!.failedTopics.length) {
-        <p class="banner banner-warn">
-          {{ t().today.partial(digest()!.failedTopics.join(', ')) }}
-        </p>
+        <app-notice class="notice" [text]="t().today.partial(digest()!.failedTopics.join(', '))" />
       }
 
       @if (!storiesReady()) {
@@ -106,7 +105,7 @@ function today(): string {
         color: var(--text-soft);
         font-size: 0.88rem;
       }
-      .banner {
+      .notice {
         margin-bottom: 16px;
       }
       .code {

@@ -2,6 +2,7 @@ import { Component, ElementRef, computed, inject, input, signal, viewChild } fro
 import { I18n } from '../i18n/i18n.service';
 import { DigestService } from './digest.service';
 import type { Story, StorySource } from '../core/models';
+import { tidyHeadline } from './tidy-headline';
 
 /**
  * One story: text on the left, thumbnail on the right.
@@ -41,7 +42,8 @@ import type { Story, StorySource } from '../core/models';
 
       <div class="foot">
         <a class="read" [href]="readUrl()" target="_blank" rel="noopener">
-          {{ t().today.readArticle }} ›
+          {{ t().today.readArticle }}
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 5l5 5-5 5" /></svg>
         </a>
         <span class="meta">
           <button class="sources" (click)="openSheet()">
@@ -82,7 +84,7 @@ import type { Story, StorySource } from '../core/models';
                 @if (langTag(source)) {
                   <span class="tag">{{ langTag(source) }}</span>
                 }
-                <span class="go" aria-hidden="true">›</span>
+                <svg class="go" viewBox="0 0 20 20" aria-hidden="true"><path d="M8 5l5 5-5 5" /></svg>
               </a>
 
               <!-- A star rather than a word: the row already carries the
@@ -124,9 +126,22 @@ import type { Story, StorySource } from '../core/models';
         display: block;
       }
       .card {
-        padding: 14px;
-        /* The topic's colour, carried in from the section that owns the story. */
-        border-left: 3px solid var(--accent, var(--border));
+        position: relative;
+        padding: 16px 16px 14px 18px;
+      }
+      /* The topic's colour, carried in from the section that owns the story:
+         a short lit bar inside the left edge, rather than a border that the
+         round corners would bend. */
+      .card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 18px;
+        bottom: 18px;
+        width: 3px;
+        border-radius: 0 3px 3px 0;
+        background: var(--accent, var(--brand));
+        box-shadow: 0 0 12px color-mix(in srgb, var(--accent, var(--brand)) 60%, transparent);
       }
       .inner {
         display: flex;
@@ -140,9 +155,13 @@ import type { Story, StorySource } from '../core/models';
       h2 {
         font-family: var(--font-display);
         font-size: 1.05rem;
-        line-height: 1.32;
-        letter-spacing: -0.01em;
+        line-height: 1.3;
+        letter-spacing: -0.012em;
         margin-bottom: 6px;
+        /* Lines of even length, so a title never ends on a lone word, letter
+           or number. tidyHeadline() does the same with no-break spaces for the
+           browsers that ignore this. */
+        text-wrap: balance;
       }
       .summary {
         margin: 0;
@@ -154,9 +173,12 @@ import type { Story, StorySource } from '../core/models';
         flex: none;
         width: 84px;
         height: 84px;
-        border-radius: var(--radius-sm);
+        border-radius: 16px;
         overflow: hidden;
         background: var(--surface-2);
+        box-shadow:
+          inset 0 0 0 1px var(--border),
+          0 10px 22px -12px rgba(0, 0, 0, 0.6);
       }
       .shot img {
         width: 100%;
@@ -171,16 +193,30 @@ import type { Story, StorySource } from '../core/models';
         gap: 12px;
         margin-top: 12px;
       }
+      /* A small pill tinted with the topic's colour. */
       .read {
         color: var(--accent, var(--brand));
-        font-size: 0.84rem;
+        font-size: 0.8rem;
         font-weight: 700;
         text-decoration: none;
-        /* Comfortably tappable without a button's worth of chrome. */
-        padding: 6px 0;
-        min-height: 32px;
+        padding: 6px 10px 6px 13px;
+        margin-left: -2px;
+        min-height: 34px;
         display: inline-flex;
         align-items: center;
+        gap: 3px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--accent, var(--brand)) 13%, transparent);
+        border: 1px solid color-mix(in srgb, var(--accent, var(--brand)) 26%, transparent);
+      }
+      .read svg {
+        width: 14px;
+        height: 14px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
       .meta {
         display: inline-flex;
@@ -213,12 +249,14 @@ import type { Story, StorySource } from '../core/models';
         max-width: calc(100vw - 36px);
         max-height: min(70dvh, calc(100dvh - 120px));
         padding: 0;
-        border: 1px solid var(--border);
+        border: 1px solid var(--glass-border);
         border-radius: var(--radius);
-        background: var(--surface);
+        background: var(--sheet-bg);
+        backdrop-filter: var(--blur);
+        -webkit-backdrop-filter: var(--blur);
         color: var(--text);
         overflow: hidden;
-        box-shadow: var(--shadow);
+        box-shadow: var(--glass-edge), var(--shadow);
       }
       /* Only while open: setting display on a dialog unconditionally would
          beat the rule that keeps a closed one hidden, and the panel would sit
@@ -230,7 +268,9 @@ import type { Story, StorySource } from '../core/models';
       .sheet::backdrop {
         /* Written out rather than through a token: what a backdrop inherits
            from is not something every engine agrees on. */
-        background: rgba(0, 0, 0, 0.55);
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
       }
       .panel {
         min-height: 0;
@@ -301,7 +341,7 @@ import type { Story, StorySource } from '../core/models';
         min-height: 48px;
         padding: 10px 14px;
         border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
+        border-radius: 999px;
         background: var(--surface-2);
         color: var(--text);
         text-decoration: none;
@@ -318,7 +358,13 @@ import type { Story, StorySource } from '../core/models';
       }
       .list .go {
         flex: none;
-        color: var(--text-dim);
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: var(--text-dim);
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
       .list .tag {
         flex: none;
@@ -338,10 +384,10 @@ import type { Story, StorySource } from '../core/models';
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        border-radius: var(--radius-sm);
+        width: 48px;
+        border-radius: 999px;
         border: 1px solid var(--border);
-        background: var(--surface);
+        background: var(--surface-2);
         color: var(--text-dim);
         padding: 0;
       }
@@ -475,7 +521,7 @@ export class StoryCard {
   readonly imageFailed = signal(false);
 
   readonly headline = computed(() =>
-    this.i18n.lang() === 'en' ? this.story().headlineEn : this.story().headlineIt,
+    tidyHeadline(this.i18n.lang() === 'en' ? this.story().headlineEn : this.story().headlineIt),
   );
 
   readonly summary = computed(() =>

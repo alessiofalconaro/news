@@ -46,7 +46,10 @@ function emptyDraft(): Draft {
         <h1>{{ t().topics.title }}</h1>
         <p class="count">{{ t().topics.activeCount(topics.activeCount(), maxActive) }}</p>
       </div>
-      <button class="btn btn-primary add" (click)="startCreate()">＋ {{ t().topics.add }}</button>
+      <button class="btn btn-primary add" (click)="startCreate()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        {{ t().topics.add }}
+      </button>
     </header>
 
     <!-- The order is not decoration: it decides the shape of the digest and
@@ -100,7 +103,7 @@ function emptyDraft(): Draft {
                 [attr.aria-label]="t().topics.moveUp"
                 (click)="topics.move(topic, -1)"
               >
-                ↑
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 12.5l5-5 5 5" /></svg>
               </button>
               <button
                 class="btn btn-ghost"
@@ -108,7 +111,7 @@ function emptyDraft(): Draft {
                 [attr.aria-label]="t().topics.moveDown"
                 (click)="topics.move(topic, 1)"
               >
-                ↓
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 7.5l5 5 5-5" /></svg>
               </button>
               <button class="btn btn-ghost" (click)="toggleActive(topic)">
                 {{ topic.isActive ? t().topics.inactive : t().topics.active }}
@@ -295,8 +298,13 @@ function emptyDraft(): Draft {
         border-top: 1px solid var(--border-soft);
       }
       .actions .btn {
-        padding: 8px 10px;
+        padding: 8px 12px;
+        min-height: 38px;
         font-size: 0.82rem;
+      }
+      .actions .btn svg {
+        width: 16px;
+        height: 16px;
       }
       .limit {
         margin-top: 14px;
@@ -319,7 +327,10 @@ function emptyDraft(): Draft {
         position: fixed;
         inset: 0;
         z-index: 80;
-        background: rgba(0, 0, 0, 0.55);
+        background: var(--backdrop);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        animation: fade-in 0.2s ease both;
       }
       .sheet {
         position: fixed;
@@ -332,9 +343,12 @@ function emptyDraft(): Draft {
         flex-direction: column;
         max-height: 88dvh;
         padding: 20px var(--page-pad) calc(14px + var(--safe-bottom));
-        background: var(--surface);
-        border-top: 1px solid var(--border);
-        border-radius: 20px 20px 0 0;
+        background: var(--sheet-bg);
+        backdrop-filter: var(--blur);
+        -webkit-backdrop-filter: var(--blur);
+        border-top: 1px solid var(--glass-border);
+        box-shadow: var(--glass-edge), 0 -20px 60px -20px rgba(0, 0, 0, 0.6);
+        border-radius: 28px 28px 0 0;
         animation: rise 0.28s cubic-bezier(0.2, 0, 0, 1) both;
       }
       .sheet h2 {
@@ -347,6 +361,51 @@ function emptyDraft(): Draft {
         margin: 0 0 14px;
         font-size: 0.9rem;
         color: var(--text);
+      }
+      /* The "active" tick as an iOS switch: a pill with a knob that slides. */
+      .check input {
+        appearance: none;
+        -webkit-appearance: none;
+        position: relative;
+        flex: none;
+        width: 46px;
+        height: 28px;
+        margin: 0;
+        padding: 0;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface-3);
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      .check input::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        transition: transform 0.22s cubic-bezier(0.34, 1.3, 0.5, 1);
+      }
+      .check input:checked {
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        border-color: transparent;
+      }
+      .check input:checked::after {
+        transform: translateX(18px);
+      }
+      .check input:focus {
+        box-shadow: var(--ring);
+      }
+      input[type='range'] {
+        padding: 0;
+        border: 0;
+        background: none;
+        box-shadow: none;
+        accent-color: var(--brand);
       }
       .advanced summary {
         cursor: pointer;
@@ -383,7 +442,9 @@ function emptyDraft(): Draft {
           transform: translate(-50%, -50%);
           width: min(520px, 92vw);
           border-radius: var(--radius);
-          border: 1px solid var(--border);
+          border: 1px solid var(--glass-border);
+          /* the rise would replace the centring transform */
+          animation: none;
         }
       }
     `,

@@ -10,18 +10,53 @@ import { firebaseConfigured } from './core/firebase.config';
 import { LangToggle } from './lang-toggle';
 import { UntranslatedBanner } from './topics/untranslated-banner';
 import { TopicFilterService } from './digest/topic-filter.service';
+import { DigestService } from './digest/digest.service';
+import { Mark } from './mark';
+import { hideSplash } from './splash';
 
-/** Bottom navigation, in order. Icons are plain emoji, as in both reference apps. */
+/**
+ * Bottom navigation, in order. Line icons drawn on a 24px grid, stroked and
+ * never filled, so they follow the text colour and stay crisp at any size: the
+ * emoji they replace looked like a children's app and sat at different heights.
+ * The newspaper page for Today, a filing box for the archive, a hash for topics,
+ * two sliders for settings.
+ */
 const NAV = [
-  { path: '/', exact: true, icon: '📰', key: 'today' },
-  { path: '/archive', exact: false, icon: '🗂️', key: 'archive' },
-  { path: '/topics', exact: false, icon: '🏷️', key: 'topics' },
-  { path: '/settings', exact: false, icon: '⚙️', key: 'settings' },
+  {
+    path: '/',
+    exact: true,
+    key: 'today',
+    icon: 'M4 5.5A1.5 1.5 0 0 1 5.5 4h10A1.5 1.5 0 0 1 17 5.5V18a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2zM17 9h1.5a1.5 1.5 0 0 1 1.5 1.5V18a2 2 0 0 1-2 2M7.5 8h6M7.5 11.5h6M7.5 15h3.5',
+  },
+  {
+    path: '/archive',
+    exact: false,
+    key: 'archive',
+    icon: 'M3.5 5.5a1.5 1.5 0 0 1 1.5-1.5h14a1.5 1.5 0 0 1 1.5 1.5V9h-17zM5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4',
+  },
+  {
+    path: '/topics',
+    exact: false,
+    key: 'topics',
+    icon: 'M9.5 4 7.5 20M16.5 4l-2 16M4.5 9h15M4 15h15',
+  },
+  {
+    path: '/settings',
+    exact: false,
+    key: 'settings',
+    icon: 'M4 7h8.5M17.5 7H20M4 17h2.5M11.5 17H20M15 9.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4zM9 19.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4z',
+  },
 ] as const;
+
+/** Theme icons, minimal lines: the moon in the light theme (go dark), the sun
+ *  in the dark one (go light). */
+const MOON = 'M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z';
+const SUN =
+  'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LangToggle, UntranslatedBanner],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LangToggle, UntranslatedBanner, Mark],
   template: `
     @if (!configured) {
       <div class="screen">
@@ -33,18 +68,11 @@ const NAV = [
         </p>
       </div>
     } @else if (!auth.ready() || auth.access() === 'checking') {
-      <!-- The same mark the page was already showing before Angular took over,
-           so the handover is invisible. It used to read "Avvio" and then
-           "Controllo dell'accesso": a program narrating its own steps, and two
-           of them, which made a short wait feel like a long one. -->
-      <div class="boot">
-        <img src="icons/icon-192.png" alt="" width="76" height="76" />
-        <span>{{ t().app.name }}</span>
-      </div>
+      <!-- Nothing: the splash in index.html (outside Angular) is still covering
+           the screen while sign-in is checked, and goes when it is settled. -->
     } @else if (!auth.user()) {
       <div class="screen login">
-        <div class="mark">📰</div>
-        <h1>{{ t().app.name }}</h1>
+        <h1 class="login-mark"><app-mark [large]="true" /></h1>
         <p>{{ t().auth.signInSubtitle }}</p>
         <button class="btn btn-primary" (click)="auth.signIn()">
           {{ t().auth.signInWithGoogle }}
@@ -56,7 +84,9 @@ const NAV = [
       </div>
     } @else if (auth.access() === 'denied') {
       <div class="screen login">
-        <div class="mark">🚫</div>
+        <span class="denied" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" /><path d="M6 6l12 12" /></svg>
+        </span>
         <h1>{{ t().auth.notAllowedTitle }}</h1>
         <p>{{ t().auth.notAllowedBody }}</p>
         <p class="muted small">{{ t().auth.signedInAs(auth.user()?.email ?? '') }}</p>
@@ -66,16 +96,20 @@ const NAV = [
       <div class="layout">
         <header class="topbar">
           <app-lang-toggle />
-          <button class="tb-title" (click)="goHome()">{{ t().app.name }}</button>
-          <button class="tb-theme" (click)="theme.toggle()" [attr.aria-label]="t().settings.theme">
-            {{ theme.light() ? '🌙' : '☀️' }}
+          <!-- Logo + name: plays a short sequel of the splash on entering the
+               app and again on every tap, which also goes back to Today. -->
+          <button class="tb-title" (click)="goHome()" [attr.aria-label]="t().app.name">
+            <app-mark />
+          </button>
+          <button class="icon-btn tb-theme" (click)="theme.toggle()" [attr.aria-label]="t().settings.theme">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="theme.light() ? moon : sun" /></svg>
           </button>
         </header>
 
         <aside class="sidebar">
-          <div class="brand">
-            📰 <span>{{ t().app.name }}</span>
-          </div>
+          <button class="brand" (click)="goHome()" [attr.aria-label]="t().app.name">
+            <app-mark />
+          </button>
           <nav class="side-nav">
             @for (item of nav; track item.path) {
               <a
@@ -83,14 +117,16 @@ const NAV = [
                 routerLinkActive="on"
                 [routerLinkActiveOptions]="{ exact: item.exact }"
               >
-                <span class="ic">{{ item.icon }}</span> {{ label(item.key) }}
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="item.icon" /></svg>
+                {{ label(item.key) }}
               </a>
             }
           </nav>
           <div class="side-foot">
             <app-lang-toggle />
             <button class="btn btn-ghost" (click)="theme.toggle()">
-              {{ theme.light() ? '🌙 ' + t().settings.themeDark : '☀️ ' + t().settings.themeLight }}
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="theme.light() ? moon : sun" /></svg>
+              {{ theme.light() ? t().settings.themeDark : t().settings.themeLight }}
             </button>
             <button class="btn btn-ghost" (click)="auth.signOut()">{{ t().auth.signOut }}</button>
           </div>
@@ -123,7 +159,7 @@ const NAV = [
             ></span>
             @for (item of nav; track item.path; let i = $index) {
               <button #entry class="entry" [class.on]="highlighted() === i" (click)="click(i)">
-                <span class="ic">{{ item.icon }}</span
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="item.icon" /></svg
                 ><small>{{ label(item.key) }}</small>
               </button>
             }
@@ -166,8 +202,29 @@ const NAV = [
         color: var(--text);
         font-size: 0.85em;
       }
-      .login .mark {
-        font-size: 2.6rem;
+      .login-mark {
+        margin-bottom: 6px;
+        font-size: 1rem;
+      }
+      .denied {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        color: var(--danger);
+      }
+      .denied svg {
+        width: 30px;
+        height: 30px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.6;
+        stroke-linecap: round;
       }
       .login .btn {
         width: 100%;
@@ -181,7 +238,7 @@ const NAV = [
       .layout {
         display: flex;
         min-height: 100dvh;
-        background: var(--bg);
+        /* no background of its own: the halos behind the glass live on body */
       }
 
       .sidebar {
@@ -206,44 +263,45 @@ const NAV = [
            both the status bar above it and the page below, so it read as a
            band laid across the top of the screen rather than as part of it. */
         background: var(--topbar-bg);
-        border-bottom: 1px solid var(--border-soft);
+      }
+      /* No hard line under the bar: its colour fades into the page. The bar
+         itself stays opaque (see above); only this tail fades. */
+      .topbar::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        height: 16px;
+        background: linear-gradient(
+          var(--topbar-bg),
+          color-mix(in srgb, var(--topbar-bg) 55%, transparent) 40%,
+          transparent
+        );
+        pointer-events: none;
       }
       .tb-title {
         min-width: 0;
-        font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 1.05rem;
-        text-align: center;
-        background: none;
-        border: 0;
-        color: var(--text);
-        padding: 4px 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .tb-theme {
-        justify-self: end;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        background: transparent;
+        background: none;
         border: 0;
-        color: var(--text-soft);
-        font-size: 1.2rem;
+        color: var(--text);
+        padding: 4px 2px;
+        min-height: 44px;
       }
-      .tb-theme:active {
-        background: var(--surface-2);
+      .tb-theme {
+        justify-self: end;
       }
 
       .main {
         flex: 1;
         min-width: 0;
         overflow-x: hidden;
-        padding: calc(66px + var(--safe-top) + var(--topbar-clear, 0px)) var(--page-pad)
+        /* the bar (56px) plus its fade (16px): at rest the page starts below
+           the fade, and only passes under it when scrolled */
+        padding: calc(74px + var(--safe-top) + var(--topbar-clear, 0px)) var(--page-pad)
           calc(96px + var(--safe-bottom));
       }
 
@@ -267,11 +325,13 @@ const NAV = [
         width: 100%;
         padding: 8px 10px calc(8px + var(--safe-bottom));
         border-radius: 26px 26px 0 0;
-        background: color-mix(in srgb, var(--surface) 72%, transparent);
-        backdrop-filter: blur(26px) saturate(1.8);
-        -webkit-backdrop-filter: blur(26px) saturate(1.8);
+        background: color-mix(in srgb, var(--surface) 70%, transparent);
+        backdrop-filter: var(--blur);
+        -webkit-backdrop-filter: var(--blur);
         border-top: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
-        box-shadow: 0 -6px 26px rgba(0, 0, 0, 0.35);
+        box-shadow:
+          inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent),
+          0 -10px 30px -6px rgba(0, 0, 0, 0.35);
         touch-action: none;
       }
       .ind {
@@ -280,10 +340,15 @@ const NAV = [
         top: 8px;
         bottom: calc(8px + var(--safe-bottom));
         border-radius: 18px;
-        background: color-mix(in srgb, var(--brand) 24%, transparent);
+        background: linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--brand) 26%, transparent),
+          color-mix(in srgb, var(--brand) 13%, transparent)
+        );
         box-shadow:
-          inset 0 0 0 1px color-mix(in srgb, var(--brand) 38%, transparent),
-          0 4px 16px color-mix(in srgb, var(--brand) 26%, transparent);
+          inset 0 0 0 1px color-mix(in srgb, var(--brand) 34%, transparent),
+          inset 0 1px 0 color-mix(in srgb, #fff 22%, transparent),
+          0 6px 18px -4px color-mix(in srgb, var(--brand) 30%, transparent);
         /* transform only: composited, so the blur underneath is not repainted. */
         transition: transform 0.3s cubic-bezier(0.34, 1.15, 0.5, 1);
         will-change: transform;
@@ -305,8 +370,22 @@ const NAV = [
         background: none;
         border: 0;
         color: var(--text-dim);
-        font-size: 1.2rem;
         transition: color 0.2s ease;
+      }
+      .entry .ic {
+        width: 23px;
+        height: 23px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition: transform 0.25s cubic-bezier(0.34, 1.4, 0.5, 1);
+      }
+      .entry.on .ic {
+        color: var(--brand);
+        stroke-width: 1.8;
+        transform: translateY(-1px) scale(1.06);
       }
       .entry small {
         font-size: 0.62rem;
@@ -331,18 +410,21 @@ const NAV = [
           flex: none;
           flex-direction: column;
           gap: 8px;
-          border-right: 1px solid var(--border);
+          border-right: 1px solid var(--glass-border);
+          background: var(--glass-bg);
           padding: 20px 16px;
           position: sticky;
           top: 0;
           height: 100dvh;
         }
         .brand {
-          font-family: var(--font-display);
-          font-size: 1.25rem;
-          font-weight: 700;
-          margin-bottom: 16px;
-          padding: 0 8px;
+          align-self: flex-start;
+          background: none;
+          border: 0;
+          margin-bottom: 18px;
+          padding: 4px 8px;
+          font-size: 1.12rem;
+          color: var(--text);
         }
         .side-nav {
           display: flex;
@@ -354,22 +436,35 @@ const NAV = [
           align-items: center;
           gap: 12px;
           padding: 11px 12px;
-          border-radius: 12px;
+          border-radius: var(--radius-pill);
+          border: 1px solid transparent;
           color: var(--text-soft);
           text-decoration: none;
           font-weight: 600;
           font-size: 0.95rem;
         }
         .side-nav a .ic {
-          font-size: 1.1rem;
+          width: 20px;
+          height: 20px;
+          flex: none;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.6;
+          stroke-linecap: round;
+          stroke-linejoin: round;
         }
         .side-nav a:hover {
           background: var(--surface-2);
           color: var(--text);
         }
         .side-nav a.on {
-          background: var(--surface-2);
+          background: var(--glass-bg);
+          border-color: var(--glass-border);
+          box-shadow: var(--glass-shadow);
           color: var(--text);
+        }
+        .side-nav a.on .ic {
+          color: var(--brand);
         }
         .side-foot {
           margin-top: auto;
@@ -401,6 +496,9 @@ export class App {
 
   readonly configured = firebaseConfigured;
   readonly nav = NAV;
+  readonly moon = MOON;
+  readonly sun = SUN;
+  private readonly digests = inject(DigestService);
   readonly t = this.i18n.t;
 
   readonly active = signal(0);
@@ -418,6 +516,22 @@ export class App {
 
   constructor() {
     this.updates.start();
+
+    // The splash stays until there is something to show: sign-in settled and,
+    // for someone let in, the list of digests arrived - so Today opens full
+    // rather than saying "loading" for a moment. The digests get a few seconds
+    // at most; sign-in gets as long as it takes, because until it answers the
+    // splash is the only thing there is to show.
+    const patience = signal(false);
+    setTimeout(() => patience.set(true), 8000);
+    effect(() => {
+      if (!this.configured) return hideSplash();
+      if (!this.auth.ready() || this.auth.access() === 'checking') return;
+      if (this.auth.user() && this.auth.access() === 'allowed') {
+        if (!this.digests.ready() && !this.digests.error() && !patience()) return;
+      }
+      hideSplash();
+    });
 
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
       window.scrollTo({ top: 0 });

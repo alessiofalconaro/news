@@ -5,7 +5,7 @@
     <title>NewsDigest</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0d0e11" />
+    <meta name="theme-color" content="#08090c" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <!-- "black" and not "black-translucent". Translucent extends the web view
@@ -20,6 +20,8 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
     <link rel="apple-touch-icon" href="icons/icon-180.png" />
+    <!-- the masthead font is the app's own: it is already needed by the splash -->
+    <link rel="preload" href="fonts/playfair-800-marchio.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -37,11 +39,25 @@
     </script>
   </head>
   <body>
-    <app-root>
-      <div class="boot">
-        <img src="icons/icon-192.png" alt="" width="76" height="76" />
-        <span>NewsDigest</span>
-      </div>
-    </app-root>
+    <!-- Splash: on screen from the first paint, before Angular exists, and
+         OUTSIDE <app-root> so Angular never redraws it (the animation would
+         start over). hideSplash() in src/app/splash.ts takes it away.
+         Styles and animation: .boot and "The mark" in styles.scss. -->
+    <div class="boot" id="boot" aria-label="NewsDigest">
+      <span class="mark-tile">
+        <span class="wave"></span><span class="wave"></span>
+        <svg viewBox="0 0 512 512" aria-hidden="true">
+          <rect class="tile-bg" width="512" height="512" rx="114" />
+          <rect class="line" x="112" y="150" width="224" height="30" rx="15" />
+          <rect class="line" x="112" y="226" width="170" height="30" rx="15" />
+          <rect class="line" x="112" y="302" width="116" height="30" rx="15" />
+          <rect class="rule" x="368" y="126" width="32" height="260" rx="16" />
+        </svg>
+      </span>
+      <span class="mark-word" aria-hidden="true"><span class="ch" style="--i:0">N</span><span class="ch" style="--i:1">e</span><span class="ch" style="--i:2">w</span><span class="ch" style="--i:3">s</span><span class="ch digest" style="--i:4">D</span><span class="ch digest" style="--i:5">i</span><span class="ch digest" style="--i:6">g</span><span class="ch digest" style="--i:7">e</span><span class="ch digest" style="--i:8">s</span><span class="ch digest" style="--i:9">t</span></span>
+      <span class="underline" aria-hidden="true"></span>
+      <span class="ticker" aria-hidden="true"></span>
+    </div>
+    <app-root></app-root>
   </body>
 </html>
