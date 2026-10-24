@@ -620,7 +620,7 @@ nuovi segreti, copiando i valori dal tuo `.env`:
 |---|---|
 | `VAPID_PUBLIC_KEY` | la riga corrispondente nel `.env` |
 | `VAPID_PRIVATE_KEY` | idem |
-| `VAPID_SUBJECT` | `mailto:alefalco28@gmail.com` |
+| `VAPID_SUBJECT` | `mailto:tua@email.com` |
 
 Senza questi il digest funziona lo stesso: semplicemente non manda avvisi.
 
